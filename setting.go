@@ -13,6 +13,10 @@ type Setting struct {
 	HeaderValue func([]byte)
 	// http 解析完成之后的回调函数
 	HeadersComplete func()
+	// body的回调函数
+	Body func([]byte)
+	// 所有消息成功解析
+	MessageComplete func()
 	// body结束
 	MessageEnd func()
 }
@@ -47,4 +51,12 @@ const (
 	headerValueDiscardWs
 	// 进入http value
 	headerValue
+	// 进入http body
+	httpBody
+)
+
+type headerState uint8
+
+const (
+	hContentLength headerState = iota + 1
 )

@@ -32,7 +32,7 @@ func Test_ParserResponse_HeaderField(t *testing.T) {
 
 	messageBegin := false
 	rsp := []byte("HTTP/1.1   200   OK\r\n" +
-		"Connection: close\r\n")
+		"Connection: close\r\n\r\n")
 	_, err := p.Execute(&Setting{Status: func(buf []byte) {
 		assert.Equal(t, buf, []byte("OK"))
 	}, MessageBegin: func() {
@@ -54,7 +54,7 @@ func Test_ParserResponse_HeaderValue(t *testing.T) {
 
 	messageBegin := false
 	rsp := []byte("HTTP/1.1   200   OK\r\n" +
-		"Connection: close\r\n")
+		"Connection: close\r\n\r\n")
 	_, err := p.Execute(&Setting{Status: func(buf []byte) {
 		assert.Equal(t, buf, []byte("OK"))
 	}, MessageBegin: func() {
@@ -70,4 +70,28 @@ func Test_ParserResponse_HeaderValue(t *testing.T) {
 	assert.Equal(t, p.major, uint8(1))
 	assert.Equal(t, p.minor, uint8(1))
 	assert.True(t, messageBegin)
+}
+
+// 测试解析Content-Length
+func Test_ParserResponse_Content_Length(t *testing.T) {
+	p := New(RESPONSE)
+
+	messageBegin := false
+	rsp := []byte("HTTP/1.1   200   OK\r\n" +
+		"Content-Length: 10\r\n" +
+		"Connection: close\r\n\r\n")
+	_, err := p.Execute(&Setting{Status: func(buf []byte) {
+		assert.Equal(t, buf, []byte("OK"))
+	}, MessageBegin: func() {
+		messageBegin = true
+	}, HeaderField: func(buf []byte) {
+	}, HeaderValue: func(buf []byte) {
+	},
+	}, rsp)
+
+	assert.NoError(t, err)
+	assert.Equal(t, p.major, uint8(1))
+	assert.Equal(t, p.minor, uint8(1))
+	assert.True(t, messageBegin)
+	assert.Equal(t, p.contentLength, int32(10))
 }

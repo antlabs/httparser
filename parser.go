@@ -3,6 +3,7 @@ package httparser
 import (
 	"bytes"
 	"errors"
+	"strconv"
 	"unicode"
 )
 
@@ -12,21 +13,28 @@ var (
 	ErrHTTPStatus     = errors.New("http status")
 	ErrRspStatusLine  = errors.New("http rsp status line")
 	ErrHeaderOverflow = errors.New("http header overflow")
+	ErrNoEndLF        = errors.New("http there is no end symbol")
 )
 
 var (
 	strTTPslash = []byte("TTP/")
 )
 
-const maxHeaderSize = 4096 //默认http header限制为4k
+var (
+	contentLength       = []byte("Content-Length")
+	maxHeaderSize int32 = 4096 //默认http header限制为4k
+)
 
 // http 1.1 or http 1.0解析器
 type Parser struct {
-	currState     state  //记录当前状态
-	major         uint8  //主版本号
-	minor         uint8  //次版本号
-	StatusCode    uint16 //状态码
-	maxHeaderSize int32  //最大头长度
+	currState        state       //记录当前状态
+	headerCurrState  headerState //记录http field状态
+	major            uint8       //主版本号
+	minor            uint8       //次版本号
+	maxHeaderSize    int32       //最大头长度
+	contentLength    int32       //content-length 值
+	StatusCode       uint16      //状态码
+	hasContentLength bool        //设置Content-Length头部
 }
 
 // 解析器构造函数
@@ -178,9 +186,14 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				setting.HeaderField(buf[i : i+pos])
 			}
 
+			if bytes.Equal(buf[i:i+pos], contentLength) {
+				p.headerCurrState = hContentLength
+			}
+
 			i += pos
 			currState = headerValueDiscardWs
 		case headerValueDiscardWs:
+			// 只跳过一个' ' or '\t'
 			if c == ' ' || c == '\t' {
 				currState = headerValue
 				continue
@@ -200,10 +213,41 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				setting.HeaderValue(buf[i : i+pos])
 			}
 
+			switch p.headerCurrState {
+			case hContentLength:
+				n, err := strconv.Atoi(BytesToString(buf[i : i+pos]))
+				if err != nil {
+					return i, err
+				}
+
+				p.contentLength = int32(n)
+				p.hasContentLength = true
+			}
+
 			i += pos
 			currState = headerField
-		case headerDone:
 
+		case headerDone:
+			if c != '\n' {
+				//return i, ErrNoEndLF
+			}
+
+			if setting.HeadersComplete != nil {
+				setting.HeadersComplete()
+			}
+
+			if p.hasContentLength {
+				if p.contentLength == 0 {
+					if setting.MessageComplete != nil {
+						setting.MessageComplete()
+						return i, nil
+					}
+				} else {
+					currState = httpBody
+				}
+			}
+
+		case httpBody:
 		}
 	}
 
