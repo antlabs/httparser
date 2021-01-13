@@ -132,7 +132,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			for ; (buf[i] == ' ' || buf[i] == '\r' || buf[i] == '\n') && i < len(buf); i++ {
 			}
 
-			for ; buf[i] >= '0' && buf[i] <= '9'; i++ {
+			for ; i < len(buf) && buf[i] >= '0' && buf[i] <= '9'; i++ {
 				p.StatusCode = uint16(int(p.StatusCode)*10 + int(buf[i]-'0'))
 			}
 
@@ -222,6 +222,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 				p.contentLength = int32(n)
 				p.hasContentLength = true
+				//TODO 清理p.headerCurrState状态
 			}
 
 			i += pos
