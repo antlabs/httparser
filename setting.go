@@ -58,5 +58,6 @@ const (
 type headerState uint8
 
 const (
-	hContentLength headerState = iota + 1
+	hGeneral headerState = iota
+	hContentLength
 )

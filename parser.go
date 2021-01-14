@@ -119,7 +119,8 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = rspHTTPVersionNum
 
 		case rspHTTPVersionNum:
-			if len(buf[i:]) < 3 || !unicode.IsNumber(rune(buf[i])) || !unicode.IsNumber(rune(buf[i+2])) { // 1.1 or 1.0 or 0.9
+			// 1.1 or 1.0 or 0.9
+			if len(buf[i:]) < 3 || !unicode.IsNumber(rune(buf[i])) || !unicode.IsNumber(rune(buf[i+2])) {
 				return 0, ErrHTTPVersionNum
 			}
 
@@ -129,7 +130,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = rspStatusCode
 
 		case rspStatusCode:
-			for ; (buf[i] == ' ' || buf[i] == '\r' || buf[i] == '\n') && i < len(buf); i++ {
+			for ; i < len(buf) && (buf[i] == ' ' || buf[i] == '\r' || buf[i] == '\n'); i++ {
 			}
 
 			for ; i < len(buf) && buf[i] >= '0' && buf[i] <= '9'; i++ {
@@ -144,11 +145,13 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			goto next
 		case rspStatus:
 			start := i
-			for ; (buf[start] == ' ' || buf[start] == '\r' || buf[start] == '\n') && start < len(buf); start++ {
+
+			// bytes.IndexAny()
+			for ; start < len(buf) && (buf[start] == ' ' || buf[start] == '\r' || buf[start] == '\n'); start++ {
 			}
 
 			end := start
-			for ; !(buf[end] == ' ' || buf[end] == '\r' || buf[end] == '\n') && end < len(buf); end++ {
+			for ; end < len(buf) && !(buf[end] == ' ' || buf[end] == '\r' || buf[end] == '\n'); end++ {
 			}
 
 			if end >= len(buf) || end+1 >= len(buf) {
@@ -202,35 +205,42 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = headerValue
 
 		case headerValue:
-			pos := bytes.IndexAny(buf[i:], "\r\n")
-			if pos == -1 {
+			end := bytes.IndexAny(buf[i:], "\r\n")
+			if end == -1 {
 				if int32(len(buf[i:])) > p.maxHeaderSize {
 					return 0, ErrHeaderOverflow
 				}
 				return i, nil
 			}
 			if setting.HeaderValue != nil {
-				setting.HeaderValue(buf[i : i+pos])
+				setting.HeaderValue(buf[i : i+end])
 			}
 
 			switch p.headerCurrState {
 			case hContentLength:
-				n, err := strconv.Atoi(BytesToString(buf[i : i+pos]))
+				n, err := strconv.Atoi(BytesToString(buf[i : i+end]))
 				if err != nil {
 					return i, err
 				}
 
 				p.contentLength = int32(n)
 				p.hasContentLength = true
-				//TODO 清理p.headerCurrState状态
+				p.headerCurrState = hGeneral
 			}
 
-			i += pos
+			// TODO 这里的\r\n 可以单独拎一个状态出来
+			i += end
+			switch {
+			case buf[i] == '\r' && buf[i+1] == '\n':
+				i++
+			case buf[i] == '\r' || buf[i] == '\n':
+			}
+
 			currState = headerField
 
 		case headerDone:
 			if c != '\n' {
-				//return i, ErrNoEndLF
+				return i, ErrNoEndLF
 			}
 
 			if setting.HeadersComplete != nil {
@@ -238,17 +248,37 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			if p.hasContentLength {
+				// 如果contentLength 等于0，说明body的内容为空，可以直接退出
 				if p.contentLength == 0 {
 					if setting.MessageComplete != nil {
 						setting.MessageComplete()
 						return i, nil
 					}
-				} else {
-					currState = httpBody
 				}
+				currState = httpBody
 			}
 
 		case httpBody:
+			if p.hasContentLength {
+				nread := min(int32(len(buf[i:])), p.contentLength)
+				if setting.Body != nil && nread > 0 {
+					setting.Body(buf[i : int32(i)+nread])
+				}
+
+				p.contentLength -= nread
+
+				if p.contentLength == 0 {
+					if setting.MessageComplete != nil {
+						setting.MessageComplete()
+					}
+					return i, nil
+				}
+
+				i += int(nread)
+			}
+
+			//TODO chunked数据
+			continue
 		}
 	}
 
@@ -263,4 +293,11 @@ func (p *Parser) SetMaxHeaderSize(size int32) {
 
 func (p *Parser) Eof() bool {
 	return true
+}
+
+func min(a, b int32) int32 {
+	if a <= b {
+		return a
+	}
+	return b
 }
