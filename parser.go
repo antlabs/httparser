@@ -21,20 +21,23 @@ var (
 )
 
 var (
-	contentLength       = []byte("Content-Length")
-	maxHeaderSize int32 = 4096 //默认http header限制为4k
+	contentLength          = []byte("Content-Length")
+	transferEncoding       = []byte("Transfer-Encoding")
+	chunked                = []byte("chunked")
+	maxHeaderSize    int32 = 4096 //默认http header限制为4k
 )
 
 // http 1.1 or http 1.0解析器
 type Parser struct {
-	currState        state       //记录当前状态
-	headerCurrState  headerState //记录http field状态
-	major            uint8       //主版本号
-	minor            uint8       //次版本号
-	maxHeaderSize    int32       //最大头长度
-	contentLength    int32       //content-length 值
-	StatusCode       uint16      //状态码
-	hasContentLength bool        //设置Content-Length头部
+	currState           state       //记录当前状态
+	headerCurrState     headerState //记录http field状态
+	major               uint8       //主版本号
+	minor               uint8       //次版本号
+	maxHeaderSize       int32       //最大头长度
+	contentLength       int32       //content-length 值
+	StatusCode          uint16      //状态码
+	hasContentLength    bool        //设置Content-Length头部
+	hasTransferEncoding bool        //transferEncoding头部
 }
 
 // 解析器构造函数
@@ -189,8 +192,14 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				setting.HeaderField(buf[i : i+pos])
 			}
 
+			// Content-Length
 			if bytes.Equal(buf[i:i+pos], contentLength) {
 				p.headerCurrState = hContentLength
+			}
+
+			// Transfer-Encoding
+			if bytes.Equal(buf[i:i+pos], transferEncoding) {
+				p.headerCurrState = hTransferEncoding
 			}
 
 			i += pos
@@ -204,6 +213,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			currState = headerValue
 
+			// 解析http value
 		case headerValue:
 			end := bytes.IndexAny(buf[i:], "\r\n")
 			if end == -1 {
@@ -226,6 +236,14 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				p.contentLength = int32(n)
 				p.hasContentLength = true
 				p.headerCurrState = hGeneral
+			case hTransferEncoding:
+				pos := bytes.Index(buf[i:i+end], chunked)
+				// 没有chunked值，归类到通用http header
+				if pos == -1 {
+					p.headerCurrState = hGeneral
+				} else {
+				}
+				p.hasTransferEncoding = true
 			}
 
 			// TODO 这里的\r\n 可以单独拎一个状态出来
@@ -247,6 +265,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				setting.HeadersComplete()
 			}
 
+			// TODO hasContentLength, hasTransferEncoding同时为true
 			if p.hasContentLength {
 				// 如果contentLength 等于0，说明body的内容为空，可以直接退出
 				if p.contentLength == 0 {
@@ -256,6 +275,11 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 					}
 				}
 				currState = httpBody
+				continue
+			}
+
+			if p.hasTransferEncoding {
+				currState = chunkedSizeStart
 			}
 
 		case httpBody:
@@ -268,18 +292,18 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				p.contentLength -= nread
 
 				if p.contentLength == 0 {
-					if setting.MessageComplete != nil {
-						setting.MessageComplete()
-					}
-					return i, nil
+					currState = messageDone
 				}
 
 				i += int(nread)
 			}
 
-			//TODO chunked数据
-			continue
+		case messageDone:
+			if setting.MessageComplete != nil {
+				setting.MessageComplete()
+			}
 		}
+
 	}
 
 	p.currState = currState

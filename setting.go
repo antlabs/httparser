@@ -36,9 +36,13 @@ const (
 	startReq state = iota + 1
 	// response状态
 	startRsp
+	// HTTP
 	rspHTTP
+	// response 版本号数字
 	rspHTTPVersionNum
+	// response 状态吗
 	rspStatusCode
+	// response状态短语
 	rspStatus
 	// request or response状态，这里让解析器自己选择
 	startReqOrRsp
@@ -53,6 +57,22 @@ const (
 	headerValue
 	// 进入http body
 	httpBody
+	// 开始进入到chunked 数字解析
+	chunkedSizeStart
+	// 进入到chunked 数字
+	chunkedSize
+	// chunked size结束
+	chunkedSizeAlmostDone
+	// chunked parameters
+	chunkedParameters
+	// chunked data
+	chunkedData
+	// chunked 检查是否真的结束
+	chunkedDataAlmostDone
+	// chunked data结束
+	chunkedDataDone
+	// 解析结束
+	messageDone
 )
 
 type headerState uint8
@@ -60,4 +80,5 @@ type headerState uint8
 const (
 	hGeneral headerState = iota
 	hContentLength
+	hTransferEncoding
 )
