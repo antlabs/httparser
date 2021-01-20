@@ -1,4 +1,4 @@
-## 辅助工具
+## 生成一些代码
 ```
-go run gen_unhex.go &>unhex.go
+make
 ```
