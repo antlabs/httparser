@@ -1,6 +1,7 @@
 package httparser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -141,4 +142,57 @@ func Test_ParserResponse_Content_Length_Body(t *testing.T) {
 	assert.Equal(t, p.major, uint8(1))
 	assert.Equal(t, p.minor, uint8(1))
 	assert.True(t, messageBegin)
+}
+
+func Test_ParserResponse_Chunked(t *testing.T) {
+	p := New(RESPONSE)
+
+	messageBegin := false
+	rcvBuf := []byte{}
+	setting := &Setting{Status: func(buf []byte) {
+		assert.Equal(t, buf, []byte("OK"))
+	}, MessageBegin: func() {
+		messageBegin = true
+	}, HeaderField: func(buf []byte) {
+
+	}, HeaderValue: func(buf []byte) {
+	}, Body: func(buf []byte) {
+		fmt.Printf("(%s)\n", buf)
+		rcvBuf = append(rcvBuf, buf...)
+	},
+	}
+
+	var rsp [3]string
+	rsp[0] = "HTTP/1.1 200 OK\r\n" +
+		"Content-Type: text/plain\r\n" +
+		"Transfer-Encoding: chunked\r\n\r\n" +
+		"7\r\n" +
+		"Mozilla\r\n" +
+		"9\r\n" +
+		"Developer\r\n" +
+		"7\r\n" +
+		"Network\r\n"
+
+	rsp[1] = "8\r\n" +
+		"new year\r\n"
+
+	rsp[2] = "0\r\n\r\n"
+	sentTotal := 0
+	parserTotal := 0
+	for _, buf := range rsp {
+		rv, err := p.Execute(setting, []byte(buf))
+		assert.NoError(t, err)
+		if err != nil {
+			return
+		}
+
+		parserTotal += rv
+		sentTotal += len(buf)
+	}
+
+	assert.Equal(t, rcvBuf, []byte("MozillaDeveloperNetworknew year"))
+	assert.Equal(t, p.major, uint8(1))
+	assert.Equal(t, p.minor, uint8(1))
+	assert.True(t, messageBegin)
+	assert.Equal(t, sentTotal, parserTotal)
 }

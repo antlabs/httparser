@@ -3,6 +3,7 @@ package httparser
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strconv"
 	"unicode"
 )
@@ -14,6 +15,8 @@ var (
 	ErrRspStatusLine  = errors.New("http rsp status line")
 	ErrHeaderOverflow = errors.New("http header overflow")
 	ErrNoEndLF        = errors.New("http there is no end symbol")
+	ErrChunkSize      = errors.New("http wrong chunk size")
+	ErrTrailerPart    = errors.New("http trailer-part is not supported")
 )
 
 var (
@@ -93,7 +96,10 @@ func (p *Parser) Init(t ReqOrRsp) {
 func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) {
 	currState := p.currState
 
-	for i := 0; i < len(buf); i++ {
+	chunkDataStartIndex := 0
+
+	i := 0
+	for ; i < len(buf); i++ {
 		c := buf[i]
 	next:
 		switch currState {
@@ -298,6 +304,71 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				i += int(nread)
 			}
 
+		case chunkedSizeStart:
+			l := unhex[c]
+			if l == -1 {
+				return 0, ErrChunkSize
+			}
+
+			p.contentLength = int32(l)
+			currState = chunkedSize
+
+		case chunkedSize:
+			if c == '\r' {
+				currState = chunkedSizeAlmostDone
+				continue
+			}
+
+			l := unhex[c]
+			if l == -1 {
+				if c == ';' {
+					currState = chunkedExt
+					continue
+				}
+
+				return 0, ErrChunkSize
+			}
+
+			p.contentLength = p.contentLength*16 + int32(l)
+
+		case chunkedExt:
+			// 忽略chunked ext
+			if c == '\r' {
+				currState = chunkedSizeAlmostDone
+			}
+
+		case chunkedSizeAlmostDone:
+			if p.contentLength == 0 {
+				//fmt.Printf("--->%d:%x\n", buf[i], buf[i])
+				//return 0, ErrTrailerPart
+				currState = messageAlmostDone
+				continue
+			}
+
+			chunkDataStartIndex = i + 1
+			currState = chunkedData
+
+		case chunkedData:
+			nread := min(int32(len(buf[i:])), p.contentLength)
+			if setting.Body != nil && nread > 0 {
+				setting.Body(buf[chunkDataStartIndex : int32(chunkDataStartIndex)+nread])
+			}
+
+			p.contentLength -= nread
+
+			if p.contentLength == 0 {
+				currState = chunkedDataAlmostDone
+			}
+
+			if nread > 0 {
+				i += int(nread) - 1
+			}
+		case chunkedDataAlmostDone:
+			currState = chunkedDataDone
+		case chunkedDataDone:
+			currState = chunkedSizeStart
+		case messageAlmostDone:
+			currState = messageDone
 		case messageDone:
 			if setting.MessageComplete != nil {
 				setting.MessageComplete()
@@ -308,7 +379,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 	p.currState = currState
 
-	return 0, nil
+	return i, nil
 }
 
 func (p *Parser) SetMaxHeaderSize(size int32) {

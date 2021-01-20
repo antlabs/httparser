@@ -63,14 +63,16 @@ const (
 	chunkedSize
 	// chunked size结束
 	chunkedSizeAlmostDone
-	// chunked parameters
-	chunkedParameters
+	// chunked ext
+	chunkedExt
 	// chunked data
 	chunkedData
 	// chunked 检查是否真的结束
 	chunkedDataAlmostDone
 	// chunked data结束
 	chunkedDataDone
+	// 快要结束
+	messageAlmostDone
 	// 解析结束
 	messageDone
 )
