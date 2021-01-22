@@ -3,7 +3,7 @@ package httparser
 type Setting struct {
 	// 解析开始
 	MessageBegin func()
-	// url 回调函数
+	// url 回调函数, 只有在request包才会回调
 	URL func([]byte)
 	// 状态短语
 	Status func([]byte)
@@ -34,6 +34,18 @@ type state uint8
 const (
 	// request状态
 	startReq state = iota + 1
+	// reqMethod状态
+	reqMethod
+	// reqMethod 后面的SP
+	reqMethodAfterSP
+	// 请求URL
+	reqURL
+	// 请求URL后面的SP
+	reqURLAfterSP
+	//
+	reqHTTP
+	// request-line \r的位置
+	reqRequestLineAlomstDone
 	// response状态
 	startRsp
 	// HTTP

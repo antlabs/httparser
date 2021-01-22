@@ -3,20 +3,21 @@ package httparser
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"strconv"
 	"unicode"
 )
 
 var (
-	ErrHTTPVersion    = errors.New("http version")
-	ErrHTTPVersionNum = errors.New("http version number")
-	ErrHTTPStatus     = errors.New("http status")
-	ErrRspStatusLine  = errors.New("http rsp status line")
-	ErrHeaderOverflow = errors.New("http header overflow")
-	ErrNoEndLF        = errors.New("http there is no end symbol")
-	ErrChunkSize      = errors.New("http wrong chunk size")
-	ErrTrailerPart    = errors.New("http trailer-part is not supported")
+	ErrHTTPVersion     = errors.New("http version")
+	ErrHTTPVersionNum  = errors.New("http version number")
+	ErrHTTPStatus      = errors.New("http status")
+	ErrRspStatusLine   = errors.New("http rsp status line")
+	ErrHeaderOverflow  = errors.New("http header overflow")
+	ErrNoEndLF         = errors.New("http there is no end symbol")
+	ErrChunkSize       = errors.New("http wrong chunk size")
+	ErrTrailerPart     = errors.New("http trailer-part is not supported")
+	ErrReqMethod       = errors.New("http request wrong method")
+	ErrRequestLineCRLF = errors.New("http request line wrong CRLF")
 )
 
 var (
@@ -87,23 +88,86 @@ func (p *Parser) Init(t ReqOrRsp) {
 // Content-Length: 6821
 // Content-Type: text/html
 
+// 响应行
 // https://tools.ietf.org/html/rfc7230#section-3.1.2 状态行
 // status-line = HTTP-version SP status-code SP reason-phrase CRLF
-
-// 注意
-// 调用必须保证status-line的数据包是完整的
+// 注意:
+// 调用必须保证status-line的数据包是完整的,不需要担心读不全status-line的情况基本不会发生
 // (mtu 大约是1530左右，而status-line不会超过1个mtu)。
+
+// 请求行
+// https://tools.ietf.org/html/rfc7230#section-3.1.1
+// method SP request-target SP HTTP-version CRLF
 func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) {
 	currState := p.currState
 
 	chunkDataStartIndex := 0
+	urlStartIndex := 0
 
 	i := 0
 	for ; i < len(buf); i++ {
 		c := buf[i]
 	next:
 		switch currState {
+		case startReqOrRsp:
+			if c == 'H' {
+				if setting.MessageBegin != nil {
+					setting.MessageBegin()
+				}
+				currState = rspHTTP
+				continue
+			}
+			currState = startReq
+			goto next
 		case startReq:
+			if token[c] == 0 {
+				return 0, ErrReqMethod
+			}
+			currState = reqMethod
+			if setting.MessageBegin != nil {
+				setting.MessageBegin()
+			}
+
+		case reqMethod:
+			if token[c] == 0 {
+				if c == ' ' || c == '\t' {
+					currState = reqMethodAfterSP
+					continue
+				}
+
+				return i, ErrReqMethod
+			}
+
+			// 维持reqMethod状态不变
+		case reqMethodAfterSP:
+			if c != ' ' && c != '\t' {
+				urlStartIndex = i
+				currState = reqURL
+			}
+
+		case reqURL:
+			if c == ' ' || c == '\t' {
+				currState = reqURLAfterSP
+				if setting.URL != nil {
+					setting.URL(buf[urlStartIndex:i])
+				}
+			}
+
+		case reqURLAfterSP:
+			if c != ' ' && c != '\t' {
+				currState = reqHTTP
+			}
+		case reqHTTP:
+			if c == '\r' {
+				currState = reqRequestLineAlomstDone
+			}
+
+		case reqRequestLineAlomstDone:
+			if c != '\n' {
+				return 0, ErrRequestLineCRLF
+			}
+
+			currState = headerField
 
 		case startRsp:
 			if c != 'H' {
