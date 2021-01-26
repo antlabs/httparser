@@ -403,9 +403,19 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 		case chunkedSizeAlmostDone:
 			if p.contentLength == 0 {
-				//fmt.Printf("--->%d:%x\n", buf[i], buf[i])
+				if setting.MessageEnd != nil {
+					// chunked data结束
+					setting.MessageEnd()
+				}
+
+				//fmt.Printf("--->%d:%x:(%s)\n", buf[i], buf[i], buf[i:])
 				//return 0, ErrTrailerPart
-				currState = messageAlmostDone
+
+				if setting.MessageComplete != nil {
+					setting.MessageComplete()
+				}
+				currState = messageDone
+
 				continue
 			}
 
@@ -431,12 +441,12 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = chunkedDataDone
 		case chunkedDataDone:
 			currState = chunkedSizeStart
-		case messageAlmostDone:
-			currState = messageDone
-		case messageDone:
-			if setting.MessageComplete != nil {
-				setting.MessageComplete()
-			}
+			//case messageAlmostDone:
+			//	currState = messageDone
+			//case messageDone:
+			//	if setting.MessageComplete != nil {
+			//		setting.MessageComplete()
+			//	}
 		}
 
 	}
@@ -448,6 +458,18 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 func (p *Parser) SetMaxHeaderSize(size int32) {
 	p.maxHeaderSize = size
+}
+
+func (p *Parser) Reset() {
+	//p.currState =
+	p.headerCurrState = hGeneral
+	p.major = 0
+	p.minor = 0
+	//p.maxHeaderSize
+	p.contentLength = 0
+	p.StatusCode = 0
+	p.hasContentLength = false
+	p.hasTransferEncoding = false
 }
 
 func (p *Parser) Eof() bool {
