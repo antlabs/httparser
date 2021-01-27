@@ -98,6 +98,7 @@ func (p *Parser) Init(t ReqOrRsp) {
 // 请求行
 // https://tools.ietf.org/html/rfc7230#section-3.1.1
 // method SP request-target SP HTTP-version CRLF
+
 func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) {
 	currState := p.currState
 
@@ -188,6 +189,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			if !bytes.Equal(buf[i:len(strTTPslash)+1], strTTPslash) {
 				return 0, ErrHTTPVersion
 			}
+
 			i += len(strTTPslash) - 1
 			currState = rspHTTPVersionNum
 
@@ -236,12 +238,12 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				i = end + 1
 			case buf[end] == '\r' || buf[end] == '\n':
 				i = end
-
 			}
 
 			if setting.Status != nil {
 				setting.Status(buf[start:end])
 			}
+
 			currState = headerField
 
 		case headerField:
@@ -258,18 +260,25 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				return i, nil
 			}
 
+			field := buf[i : i+pos]
 			if setting.HeaderField != nil {
-				setting.HeaderField(buf[i : i+pos])
+				setting.HeaderField(field)
 			}
 
-			// Content-Length
-			if bytes.Equal(buf[i:i+pos], contentLength) {
-				p.headerCurrState = hContentLength
-			}
-
-			// Transfer-Encoding
-			if bytes.Equal(buf[i:i+pos], transferEncoding) {
-				p.headerCurrState = hTransferEncoding
+			c2 := c | 0x20
+			if c2 == 'c' || c2 == 't' {
+				if bytes.Equal(field, contentLength) {
+					// Content-Length
+					p.headerCurrState = hContentLength
+				} else if bytes.Equal(field, transferEncoding) {
+					// Transfer-Encoding
+					p.headerCurrState = hTransferEncoding
+				} else {
+					// general
+					p.headerCurrState = hGeneral
+				}
+			} else {
+				p.headerCurrState = hGeneral
 			}
 
 			i += pos
@@ -292,6 +301,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				}
 				return i, nil
 			}
+
 			if setting.HeaderValue != nil {
 				setting.HeaderValue(buf[i : i+end])
 			}
