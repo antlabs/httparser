@@ -1,18 +1,11 @@
-# httparser
-高性能http 1.1解析器，为你的异步io库插上解析的翅膀[从零实现]
+package main
 
-## 出发点
-本来想基于异步io库写些好玩的代码，发现没有适用于这些库的http解析库，索性就自己写个，弥补golang生态一小片空白领域。
+import (
+	"fmt"
+	"github.com/antlabs/httparser"
+)
 
-## 特性
-* url解析
-* request or response header field解析
-* request or response  header value解析
-* Content-Length数据包解析
-* chunked数据包解析
-
-## parser request
-```go
+func main() {
 	var data = []byte(
 		"POST /joyent/http-parser HTTP/1.1\r\n" +
 			"Host: github.com\r\n" +
@@ -67,32 +60,4 @@
 	success, err := p.Execute(&setting, data)
 
 	fmt.Printf("success:%d, err:%v\n", success, err)
-```
-
-## response
-[response](./_example/response.go)
-
-## request or response
-如果你不确定数据包是请求还是响应，可看下面的例子  
-[request or response](./_example/request_or_response.go)
-
-
-## 编译
-### 生成 unhex表和tokens表
-如果需要修改这两个表，可以到_cmd目录下面修改生成代码的代码
-```Makefile
-make gen
-```
-
-### 编译example
-```Makefile
-make example
-```
-### 运行示例
-```Makefile
-make example.run
-```
-
-### 吞吐量
-* 测试仓库 https://github.com/junelabs/httparser-benchmark
-* Benchmark result: 8192.00 mb | 315.08 mb/s | 637803.27 req/sec | 26.00 s
+}

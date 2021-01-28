@@ -17,8 +17,6 @@ type Setting struct {
 	Body func([]byte)
 	// 所有消息成功解析
 	MessageComplete func()
-	// body结束
-	MessageEnd func()
 }
 
 type ReqOrRsp uint8

@@ -27,7 +27,6 @@ var setting = Setting{
 	HeadersComplete: func() {},
 	Body:            func([]byte) {},
 	MessageComplete: func() {},
-	MessageEnd:      func() {},
 }
 
 func Benchmark_Parser(b *testing.B) {

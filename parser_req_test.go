@@ -49,7 +49,6 @@ func Test_ParserResponse_RequestBody(t *testing.T) {
 			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n")
 
 	messageBegin := false
-	messageEnd := false
 	messageComplete := false
 	headersComplete := false
 
@@ -109,9 +108,6 @@ func Test_ParserResponse_RequestBody(t *testing.T) {
 		MessageComplete: func() {
 			messageComplete = true
 		},
-		MessageEnd: func() {
-			messageEnd = true
-		},
 	}
 
 	i, err := p.Execute(&setting, data)
@@ -122,7 +118,6 @@ func Test_ParserResponse_RequestBody(t *testing.T) {
 	assert.Equal(t, string(value), value2)              //header field
 	assert.Equal(t, string(body), body2)                //chunked body
 	assert.True(t, messageBegin)
-	assert.True(t, messageEnd)
 	assert.True(t, messageComplete)
 	assert.True(t, headersComplete)
 }

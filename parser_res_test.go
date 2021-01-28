@@ -157,7 +157,6 @@ func Test_ParserResponse_Chunked(t *testing.T) {
 
 	}, HeaderValue: func(buf []byte) {
 	}, Body: func(buf []byte) {
-		fmt.Printf("(%s)\n", buf)
 		rcvBuf = append(rcvBuf, buf...)
 	},
 	}

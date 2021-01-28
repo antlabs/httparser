@@ -106,8 +106,9 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 	urlStartIndex := 0
 
 	i := 0
+	c := byte(0)
 	for ; i < len(buf); i++ {
-		c := buf[i]
+		c = buf[i]
 	next:
 		switch currState {
 		case startReqOrRsp:
@@ -413,10 +414,6 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 		case chunkedSizeAlmostDone:
 			if p.contentLength == 0 {
-				if setting.MessageEnd != nil {
-					// chunked data结束
-					setting.MessageEnd()
-				}
 
 				//fmt.Printf("--->%d:%x:(%s)\n", buf[i], buf[i], buf[i:])
 				//return 0, ErrTrailerPart
