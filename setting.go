@@ -87,6 +87,37 @@ const (
 	messageDone
 )
 
+// debug使用
+var stateTab = []string{
+	startReq:                 "startReq",
+	reqMethod:                "reqMethod",
+	reqMethodAfterSP:         "reqMethodAfterSP",
+	reqURL:                   "reqURL",
+	reqURLAfterSP:            "reqURLAfterSP",
+	reqHTTP:                  "reqHTTP",
+	reqRequestLineAlomstDone: "reqRequestLineAlomstDon",
+	startRsp:                 "startRsp",
+	rspHTTP:                  "rspHTTP",
+	rspHTTPVersionNum:        "rspHTTPVersionNum",
+	rspStatusCode:            "rspStatusCode",
+	rspStatus:                "rspStatus",
+	startReqOrRsp:            "startReqOrRsp",
+	headerDone:               "headerDone",
+	headerField:              "headerField",
+	headerValueDiscardWs:     "headerValueDiscardWs",
+	headerValue:              "headerValue",
+	httpBody:                 "httpBody",
+	chunkedSizeStart:         "chunkedSizeStart",
+	chunkedSize:              "chunkedSize",
+	chunkedSizeAlmostDone:    "chunkedSizeAlmostDone",
+	chunkedExt:               "chunkedExt",
+	chunkedData:              "chunkedData",
+	chunkedDataAlmostDone:    "chunkedDataAlmostDone",
+	chunkedDataDone:          "chunkedDataDone",
+	messageAlmostDone:        "messageAlmostDone",
+	messageDone:              "messageDone",
+}
+
 type headerState uint8
 
 const (

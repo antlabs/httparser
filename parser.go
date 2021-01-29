@@ -28,7 +28,7 @@ var (
 	contentLength          = []byte("Content-Length")
 	transferEncoding       = []byte("Transfer-Encoding")
 	chunked                = []byte("chunked")
-	maxHeaderSize    int32 = 4096 //默认http header限制为4k
+	maxHeaderSize    int32 = 4096 //默认http header单行最大限制为4k
 )
 
 // http 1.1 or http 1.0解析器
@@ -322,7 +322,6 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				// 没有chunked值，归类到通用http header
 				if pos == -1 {
 					p.headerCurrState = hGeneral
-				} else {
 				}
 				p.hasTransferEncoding = true
 			}
@@ -480,7 +479,7 @@ func (p *Parser) Reset() {
 }
 
 func (p *Parser) Eof() bool {
-	return true
+	return p.currState == messageDone
 }
 
 func min(a, b int32) int32 {
