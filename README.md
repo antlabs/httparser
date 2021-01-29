@@ -1,6 +1,6 @@
 # httparser
 [![Go](https://github.com/antlabs/httparser/workflows/Go/badge.svg)](https://github.com/antlabs/httparser/actions)
-[![codecov](https://codecov.io/gh/antlabs/httparser/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/httparser)  
+[![codecov](https://codecov.io/gh/antlabs/httparser/branch/main/graph/badge.svg)](https://codecov.io/gh/antlabs/httparser)  
 
 高性能http 1.1解析器，为你的异步io库插上解析的翅膀[从零实现]
 
