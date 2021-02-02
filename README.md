@@ -97,7 +97,7 @@ make example.run
 ```
 ### return value
 * err != nil 错误
-* sucess== len(data) 所有数据成功解析
+* sucess == len(data) 所有数据成功解析
 * sucess < len(data) 只解析部分数据，未解析的数据需再送一次
 
 ### 吞吐量

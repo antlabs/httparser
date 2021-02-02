@@ -41,7 +41,7 @@ const (
 	// 请求URL后面的SP
 	reqURLAfterSP
 	//
-	reqHTTP
+	reqHTTPVersion
 	// request-line \r的位置
 	reqRequestLineAlomstDone
 	// response状态
@@ -65,6 +65,10 @@ const (
 	headerValueDiscardWs
 	// 进入http value
 	headerValue
+	// 刚开始进入http value后面的OWS
+	headerValueStartOWS
+	// 快要离开http value后面的OWS
+	headerValueOWS
 	// 进入http body
 	httpBody
 	// 开始进入到chunked 数字解析
@@ -94,8 +98,8 @@ var stateTab = []string{
 	reqMethodAfterSP:         "reqMethodAfterSP",
 	reqURL:                   "reqURL",
 	reqURLAfterSP:            "reqURLAfterSP",
-	reqHTTP:                  "reqHTTP",
-	reqRequestLineAlomstDone: "reqRequestLineAlomstDon",
+	reqHTTPVersion:           "reqHTTPVersion",
+	reqRequestLineAlomstDone: "reqRequestLineAlomstDone",
 	startRsp:                 "startRsp",
 	rspHTTP:                  "rspHTTP",
 	rspHTTPVersionNum:        "rspHTTPVersionNum",
@@ -106,6 +110,8 @@ var stateTab = []string{
 	headerField:              "headerField",
 	headerValueDiscardWs:     "headerValueDiscardWs",
 	headerValue:              "headerValue",
+	headerValueStartOWS:      "headerValueStartOWS",
+	headerValueOWS:           "headerValueOWS",
 	httpBody:                 "httpBody",
 	chunkedSizeStart:         "chunkedSizeStart",
 	chunkedSize:              "chunkedSize",

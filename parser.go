@@ -91,13 +91,13 @@ func (p *Parser) Init(t ReqOrRsp) {
 // 响应行
 // https://tools.ietf.org/html/rfc7230#section-3.1.2 状态行
 // status-line = HTTP-version SP status-code SP reason-phrase CRLF
-// 注意:
-// 调用必须保证status-line的数据包是完整的,不需要担心读不全status-line的情况基本不会发生
-// (mtu 大约是1530左右，而status-line不会超过1个mtu)。
 
 // 请求行
 // https://tools.ietf.org/html/rfc7230#section-3.1.1
 // method SP request-target SP HTTP-version CRLF
+
+// 设计思路修改
+// 为了适应流量解析的场景，状态机的状态会更碎一点
 
 func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) {
 	currState := p.currState
@@ -107,9 +107,11 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 	i := 0
 	c := byte(0)
+
 	for ; i < len(buf); i++ {
 		c = buf[i]
-	next:
+
+	reExec:
 		switch currState {
 		case startReqOrRsp:
 			if c == 'H' {
@@ -120,11 +122,12 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				continue
 			}
 			currState = startReq
-			goto next
+			fallthrough
 		case startReq:
 			if token[c] == 0 {
 				return 0, ErrReqMethod
 			}
+
 			currState = reqMethod
 			if setting.MessageBegin != nil {
 				setting.MessageBegin()
@@ -157,9 +160,9 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 		case reqURLAfterSP:
 			if c != ' ' && c != '\t' {
-				currState = reqHTTP
+				currState = reqHTTPVersion
 			}
-		case reqHTTP:
+		case reqHTTPVersion:
 			if c == '\r' {
 				currState = reqRequestLineAlomstDone
 			}
@@ -218,7 +221,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			currState = rspStatus
-			goto next
+			goto reExec
 		case rspStatus:
 			start := i
 
@@ -234,6 +237,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				return 0, ErrRspStatusLine
 			}
 
+			//TODO单独状态
 			switch {
 			case buf[end] == '\r' && buf[end+1] == '\n':
 				i = end + 1
@@ -258,6 +262,8 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				if int32(len(buf[i:])) > p.maxHeaderSize {
 					return 0, ErrHeaderOverflow
 				}
+
+				p.currState = headerField
 				return i, nil
 			}
 
@@ -286,12 +292,10 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = headerValueDiscardWs
 		case headerValueDiscardWs:
 			// 只跳过一个' ' or '\t'
+			currState = headerValue
 			if c == ' ' || c == '\t' {
-				currState = headerValue
 				continue
 			}
-
-			currState = headerValue
 
 			// 解析http value
 		case headerValue:
@@ -300,6 +304,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				if int32(len(buf[i:])) > p.maxHeaderSize {
 					return 0, ErrHeaderOverflow
 				}
+				p.currState = headerValueDiscardWs
 				return i, nil
 			}
 
@@ -326,15 +331,28 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				p.hasTransferEncoding = true
 			}
 
-			// TODO 这里的\r\n 可以单独拎一个状态出来
 			i += end
-			switch {
-			case buf[i] == '\r' && buf[i+1] == '\n':
-				i++
-			case buf[i] == '\r' || buf[i] == '\n':
+
+			c = buf[i]
+			currState = headerValueStartOWS
+			// 进入header value的OWS
+			fallthrough
+		case headerValueStartOWS:
+			if c == '\r' {
+				currState = headerValueOWS
+				continue
 			}
 
+			// 不是'\r'的情况，继续往下判断
+			fallthrough
+		case headerValueOWS:
 			currState = headerField
+			if c == '\n' {
+				continue
+			}
+
+			// 不是'\n'也许是headerField的数据
+			goto reExec
 
 		case headerDone:
 			if c != '\n' {
@@ -447,12 +465,15 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = chunkedDataDone
 		case chunkedDataDone:
 			currState = chunkedSizeStart
-			//case messageAlmostDone:
-			//	currState = messageDone
-			//case messageDone:
-			//	if setting.MessageComplete != nil {
-			//		setting.MessageComplete()
-			//	}
+		case messageDone:
+			// 规范的chunked包是以\r\n结尾的
+			if c == '\r' || c == '\n' {
+				continue
+			}
+
+			currState = startReqOrRsp
+			p.Reset()
+			goto reExec
 		}
 
 	}
@@ -467,7 +488,7 @@ func (p *Parser) SetMaxHeaderSize(size int32) {
 }
 
 func (p *Parser) Reset() {
-	//p.currState =
+	p.currState = startReqOrRsp
 	p.headerCurrState = hGeneral
 	p.major = 0
 	p.minor = 0
@@ -476,6 +497,11 @@ func (p *Parser) Reset() {
 	p.StatusCode = 0
 	p.hasContentLength = false
 	p.hasTransferEncoding = false
+}
+
+// debug专用
+func (p *Parser) Status() string {
+	return stateTab[p.currState]
 }
 
 func (p *Parser) Eof() bool {
