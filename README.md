@@ -102,4 +102,4 @@ make example.run
 
 ### 吞吐量
 * 测试仓库 https://github.com/junelabs/httparser-benchmark
-* Benchmark result: 8192.00 mb | 315.08 mb/s | 637803.27 req/sec | 26.00 s
+* Benchmark result: 8192.00 mb | 630.15 mb/s | 1275606.54 req/sec | 13.00 s
