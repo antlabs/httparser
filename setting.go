@@ -1,22 +1,23 @@
 package httparser
 
+// 查阅#6 看设计变更原因
 type Setting struct {
 	// 解析开始
-	MessageBegin func()
+	MessageBegin func(*Parser)
 	// url 回调函数, 只有在request包才会回调
-	URL func([]byte)
+	URL func(*Parser, []byte)
 	// 状态短语
-	Status func([]byte)
+	Status func(*Parser, []byte)
 	// http field 回调函数
-	HeaderField func([]byte)
+	HeaderField func(*Parser, []byte)
 	// http value 回调函数
-	HeaderValue func([]byte)
+	HeaderValue func(*Parser, []byte)
 	// http 解析完成之后的回调函数
-	HeadersComplete func()
+	HeadersComplete func(*Parser)
 	// body的回调函数
-	Body func([]byte)
+	Body func(*Parser, []byte)
 	// 所有消息成功解析
-	MessageComplete func()
+	MessageComplete func(*Parser)
 }
 
 type ReqOrRsp uint8

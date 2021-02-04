@@ -19,14 +19,14 @@ var data = []byte(
 		"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n")
 
 var setting = Setting{
-	MessageBegin:    func() {},
-	URL:             func([]byte) {},
-	Status:          func([]byte) {},
-	HeaderField:     func([]byte) {},
-	HeaderValue:     func([]byte) {},
-	HeadersComplete: func() {},
-	Body:            func([]byte) {},
-	MessageComplete: func() {},
+	MessageBegin:    func(*Parser) {},
+	URL:             func(*Parser, []byte) {},
+	Status:          func(*Parser, []byte) {},
+	HeaderField:     func(*Parser, []byte) {},
+	HeaderValue:     func(*Parser, []byte) {},
+	HeadersComplete: func(*Parser) {},
+	Body:            func(*Parser, []byte) {},
+	MessageComplete: func(*Parser) {},
 }
 
 func Benchmark_Parser(b *testing.B) {

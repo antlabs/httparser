@@ -62,28 +62,28 @@ func Test_ParserResponse_RequestBody_BOTH(t *testing.T) {
 			"Cache-Control")
 
 	var setting = Setting{
-		MessageBegin: func() {
+		MessageBegin: func(*Parser) {
 			messageBegin = true
 		},
-		URL: func(buf []byte) {
+		URL: func(p *Parser, buf []byte) {
 			url = append(url, buf...)
 		},
-		Status: func([]byte) {
+		Status: func(*Parser, []byte) {
 			// 响应包才需要用到
 		},
-		HeaderField: func(buf []byte) {
+		HeaderField: func(p *Parser, buf []byte) {
 			field = append(field, buf...)
 		},
-		HeaderValue: func(buf []byte) {
+		HeaderValue: func(p *Parser, buf []byte) {
 			value = append(value, buf...)
 		},
-		HeadersComplete: func() {
+		HeadersComplete: func(*Parser) {
 			headersComplete = true
 		},
-		Body: func(buf []byte) {
+		Body: func(p *Parser, buf []byte) {
 			body = append(body, buf...)
 		},
-		MessageComplete: func() {
+		MessageComplete: func(p *Parser) {
 			messageComplete = true
 		},
 	}
@@ -108,14 +108,14 @@ func Test_ParserResponse_Chunked_Both(t *testing.T) {
 
 	messageBegin := false
 	rcvBuf := []byte{}
-	setting := &Setting{Status: func(buf []byte) {
+	setting := &Setting{Status: func(p *Parser, buf []byte) {
 		assert.Equal(t, buf, []byte("OK"))
-	}, MessageBegin: func() {
+	}, MessageBegin: func(p *Parser) {
 		messageBegin = true
-	}, HeaderField: func(buf []byte) {
+	}, HeaderField: func(p *Parser, buf []byte) {
 
-	}, HeaderValue: func(buf []byte) {
-	}, Body: func(buf []byte) {
+	}, HeaderValue: func(p *Parser, buf []byte) {
+	}, Body: func(p *Parser, buf []byte) {
 		rcvBuf = append(rcvBuf, buf...)
 	},
 	}

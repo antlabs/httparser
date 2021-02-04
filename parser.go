@@ -116,7 +116,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 		case startReqOrRsp:
 			if c == 'H' {
 				if setting.MessageBegin != nil {
-					setting.MessageBegin()
+					setting.MessageBegin(p)
 				}
 				currState = rspHTTP
 				continue
@@ -130,7 +130,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			currState = reqMethod
 			if setting.MessageBegin != nil {
-				setting.MessageBegin()
+				setting.MessageBegin(p)
 			}
 
 		case reqMethod:
@@ -154,7 +154,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			if c == ' ' || c == '\t' {
 				currState = reqURLAfterSP
 				if setting.URL != nil {
-					setting.URL(buf[urlStartIndex:i])
+					setting.URL(p, buf[urlStartIndex:i])
 				}
 			}
 
@@ -180,7 +180,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			if setting.MessageBegin != nil {
-				setting.MessageBegin()
+				setting.MessageBegin(p)
 			}
 
 			currState = rspHTTP
@@ -246,7 +246,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			if setting.Status != nil {
-				setting.Status(buf[start:end])
+				setting.Status(p, buf[start:end])
 			}
 
 			currState = headerField
@@ -269,7 +269,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			field := buf[i : i+pos]
 			if setting.HeaderField != nil {
-				setting.HeaderField(field)
+				setting.HeaderField(p, field)
 			}
 
 			c2 := c | 0x20
@@ -309,7 +309,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			if setting.HeaderValue != nil {
-				setting.HeaderValue(buf[i : i+end])
+				setting.HeaderValue(p, buf[i:i+end])
 			}
 
 			switch p.headerCurrState {
@@ -360,7 +360,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			if setting.HeadersComplete != nil {
-				setting.HeadersComplete()
+				setting.HeadersComplete(p)
 			}
 
 			// TODO hasContentLength, hasTransferEncoding同时为true
@@ -368,7 +368,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				// 如果contentLength 等于0，说明body的内容为空，可以直接退出
 				if p.contentLength == 0 {
 					if setting.MessageComplete != nil {
-						setting.MessageComplete()
+						setting.MessageComplete(p)
 						return i, nil
 					}
 				}
@@ -384,7 +384,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			if p.hasContentLength {
 				nread := min(int32(len(buf[i:])), p.contentLength)
 				if setting.Body != nil && nread > 0 {
-					setting.Body(buf[i : int32(i)+nread])
+					setting.Body(p, buf[i:int32(i)+nread])
 				}
 
 				p.contentLength -= nread
@@ -436,7 +436,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				//return 0, ErrTrailerPart
 
 				if setting.MessageComplete != nil {
-					setting.MessageComplete()
+					setting.MessageComplete(p)
 				}
 				currState = messageDone
 
@@ -449,7 +449,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 		case chunkedData:
 			nread := min(int32(len(buf[i:])), p.contentLength)
 			if setting.Body != nil && nread > 0 {
-				setting.Body(buf[chunkDataStartIndex : int32(chunkDataStartIndex)+nread])
+				setting.Body(p, buf[chunkDataStartIndex:int32(chunkDataStartIndex)+nread])
 			}
 
 			p.contentLength -= nread

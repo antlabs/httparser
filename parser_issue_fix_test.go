@@ -41,24 +41,24 @@ func Test_Isuse1(t *testing.T) {
 
 	body := []byte{}
 	var setting = Setting{
-		MessageBegin: func() {
+		MessageBegin: func(*Parser) {
 			fmt.Println("---- begin")
 		},
-		URL: func(buf []byte) {
+		URL: func(p *Parser, buf []byte) {
 		},
-		Status: func([]byte) {
+		Status: func(*Parser, []byte) {
 			// 响应包才需要用到
 		},
-		HeaderField: func(buf []byte) {
+		HeaderField: func(p *Parser, buf []byte) {
 		},
-		HeaderValue: func(buf []byte) {
+		HeaderValue: func(p *Parser, buf []byte) {
 		},
-		HeadersComplete: func() {
+		HeadersComplete: func(p *Parser) {
 		},
-		Body: func(buf []byte) {
+		Body: func(p *Parser, buf []byte) {
 			body = append(body, buf...)
 		},
-		MessageComplete: func() {
+		MessageComplete: func(p *Parser) {
 		},
 	}
 
@@ -101,22 +101,22 @@ func Test_Issue2(t *testing.T) {
 
 	var body []byte
 	var setting = Setting{
-		MessageBegin: func() {
+		MessageBegin: func(*Parser) {
 		},
-		URL: func(buf []byte) {
+		URL: func(p *Parser, buf []byte) {
 		},
-		Status: func([]byte) {
+		Status: func(*Parser, []byte) {
 		},
-		HeaderField: func(buf []byte) {
+		HeaderField: func(p *Parser, buf []byte) {
 		},
-		HeaderValue: func(buf []byte) {
+		HeaderValue: func(p *Parser, buf []byte) {
 		},
-		HeadersComplete: func() {
+		HeadersComplete: func(p *Parser) {
 		},
-		Body: func(buf []byte) {
+		Body: func(p *Parser, buf []byte) {
 			body = append(body, buf...)
 		},
-		MessageComplete: func() {
+		MessageComplete: func(p *Parser) {
 			fmt.Println("---- complete")
 		},
 	}
