@@ -42,6 +42,7 @@ type Parser struct {
 	StatusCode          uint16      //状态码
 	hasContentLength    bool        //设置Content-Length头部
 	hasTransferEncoding bool        //transferEncoding头部
+	userData            interface{}
 }
 
 // 解析器构造函数
@@ -66,6 +67,12 @@ func (p *Parser) Init(t ReqOrRsp) {
 	p.minor = 0
 	p.maxHeaderSize = maxHeaderSize
 
+}
+
+// 一般情况，可以使用Setting里面函数闭包特性捕获变量
+// 有时候了节约内存，使用普通函数，这时候用户数据可以放到p.userData里面
+func (p *Parser) SetUserData(d interface{}) {
+	p.userData = d
 }
 
 // Execute传递setting参数, 该API 设计成现有形式有如下原因:
