@@ -6,6 +6,9 @@
 *.dll
 *.so
 *.dylib
+request
+request_or_response
+response
 
 # Test binary, built with `go test -c`
 *.test

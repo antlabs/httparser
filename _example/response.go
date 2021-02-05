@@ -21,34 +21,34 @@ func main() {
 			"\r\n")
 
 	var setting = httparser.Setting{
-		MessageBegin: func() {
+		MessageBegin: func(*httparser.Parser) {
 			//解析器开始工作
 			fmt.Printf("begin\n")
 		},
-		URL: func(buf []byte) {
+		URL: func(_ *httparser.Parser, buf []byte) {
 			//url数据
 			fmt.Printf("url->%s\n", buf)
 		},
-		Status: func([]byte) {
+		Status: func(*httparser.Parser, []byte) {
 			// 响应包才需要用到
 		},
-		HeaderField: func(buf []byte) {
+		HeaderField: func(_ *httparser.Parser, buf []byte) {
 			// http header field
 			fmt.Printf("header field:%s\n", buf)
 		},
-		HeaderValue: func(buf []byte) {
+		HeaderValue: func(_ *httparser.Parser, buf []byte) {
 			// http header value
 			fmt.Printf("header value:%s\n", buf)
 		},
-		HeadersComplete: func() {
+		HeadersComplete: func(_ *httparser.Parser) {
 			// http header解析结束
 			fmt.Printf("header complete\n")
 		},
-		Body: func(buf []byte) {
+		Body: func(_ *httparser.Parser, buf []byte) {
 			fmt.Printf("%s", buf)
 			// Content-Length 或者chunked数据包
 		},
-		MessageComplete: func() {
+		MessageComplete: func(_ *httparser.Parser) {
 			// 消息解析结束
 			fmt.Printf("\n")
 		},
