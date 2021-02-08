@@ -28,7 +28,7 @@ var (
 	contentLength          = []byte("Content-Length")
 	transferEncoding       = []byte("Transfer-Encoding")
 	chunked                = []byte("chunked")
-	maxHeaderSize    int32 = 4096 //默认http header单行最大限制为4k
+	MaxHeaderSize    int32 = 4096 //默认http header单行最大限制为4k
 )
 
 // http 1.1 or http 1.0解析器
@@ -37,7 +37,7 @@ type Parser struct {
 	headerCurrState     headerState //记录http field状态
 	major               uint8       //主版本号
 	minor               uint8       //次版本号
-	maxHeaderSize       int32       //最大头长度
+	MaxHeaderSize       int32       //最大头长度
 	contentLength       int32       //content-length 值
 	StatusCode          uint16      //状态码
 	hasContentLength    bool        //设置Content-Length头部
@@ -65,7 +65,7 @@ func (p *Parser) Init(t ReqOrRsp) {
 
 	p.major = 0
 	p.minor = 0
-	p.maxHeaderSize = maxHeaderSize
+	p.MaxHeaderSize = MaxHeaderSize
 
 }
 
@@ -266,7 +266,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			pos := bytes.IndexByte(buf[i:], ':')
 			if pos == -1 {
-				if int32(len(buf[i:])) > p.maxHeaderSize {
+				if int32(len(buf[i:])) > p.MaxHeaderSize {
 					return 0, ErrHeaderOverflow
 				}
 
@@ -308,7 +308,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 		case headerValue:
 			end := bytes.IndexAny(buf[i:], "\r\n")
 			if end == -1 {
-				if int32(len(buf[i:])) > p.maxHeaderSize {
+				if int32(len(buf[i:])) > p.MaxHeaderSize {
 					return 0, ErrHeaderOverflow
 				}
 				p.currState = headerValueDiscardWs
@@ -490,16 +490,12 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 	return i, nil
 }
 
-func (p *Parser) SetMaxHeaderSize(size int32) {
-	p.maxHeaderSize = size
-}
-
 func (p *Parser) Reset() {
 	p.currState = startReqOrRsp
 	p.headerCurrState = hGeneral
 	p.major = 0
 	p.minor = 0
-	//p.maxHeaderSize
+	//p.MaxHeaderSize
 	p.contentLength = 0
 	p.StatusCode = 0
 	p.hasContentLength = false

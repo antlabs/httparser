@@ -1,6 +1,8 @@
 package httparser
 
 import (
+	"bytes"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -268,22 +270,26 @@ func Test_ParserRequest_chunked_segment(t *testing.T) {
 
 		// 双缓冲buffer
 		// 左边放溢出的，右边放本次读入数据, 这么设计可以减少内存拷贝
-		doubleBuffer := make([]byte, size*2)
+		tb := NewTwoBuf(size * 2)
 
-		left := size
 		body = []byte{}
 		totalSentBuf := []byte{} //存放送入Execute的总数据
 
-		for leftSize := 0; leftSize < len(data); leftSize += size {
-			//计算最小右边 边际
-			right := min(int32(leftSize+size), int32(len(data)))
+		r := bytes.NewReader(data)
+		for {
 
-			//拷贝右边数据
-			n := copy(doubleBuffer[size:], data[leftSize:right]) //模拟从异步io里面填充一块buffer
+			// 取右边buffer
+			buf := tb.Right()
+
+			//模拟从异步io里面填充一块buffer
+			n, err := r.Read(buf)
+			if err == io.EOF {
+				break
+			}
 
 			// 把溢出数据包含进来
 			// 左边放需要重新解析数据，右边放新塞的buffer
-			currSentData := doubleBuffer[left : size+n]
+			currSentData := tb.All(n)
 
 			//解析
 			success, err := p.Execute(&setting, currSentData)
@@ -295,20 +301,17 @@ func Test_ParserRequest_chunked_segment(t *testing.T) {
 				// 测试用, 把送入解析器的buffer累加起来，最后验证下数据送得对不对
 				totalSentBuf = append(totalSentBuf, currSentData[:success]...)
 
-				left = size - (len(currSentData) - success)
-				n = copy(doubleBuffer[left:], currSentData[success:])
-				if n >= size {
-					panic("abnormal")
-				}
-
+				tb.MoveLeft(currSentData[success:])
 			} else {
 				// 测试用
 				totalSentBuf = append(totalSentBuf, currSentData...)
 
-				left = size
+				tb.Reset()
+
 			}
 
 		}
+		tb.Reset()
 
 		b := assert.Equal(t, string(data), string(totalSentBuf))
 		if !b {
