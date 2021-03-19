@@ -28,6 +28,8 @@ var (
 	contentLength          = []byte("Content-Length")
 	transferEncoding       = []byte("Transfer-Encoding")
 	chunked                = []byte("chunked")
+	bytesConnection        = []byte("Connection")
+	bytesClose             = []byte("close")
 	MaxHeaderSize    int32 = 4096 //默认http header单行最大限制为4k
 )
 
@@ -42,6 +44,7 @@ type Parser struct {
 	StatusCode          uint16      //状态码
 	hasContentLength    bool        //设置Content-Length头部
 	hasTransferEncoding bool        //transferEncoding头部
+	hasClose            bool        // Connection: close
 	userData            interface{}
 }
 
@@ -118,6 +121,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 	for ; i < len(buf); i++ {
 		c = buf[i]
 
+		//fmt.Printf("---->debug state(%s):(%s)\n", currState, buf[i:])
 	reExec:
 		switch currState {
 		case startReqOrRsp:
@@ -287,6 +291,9 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				} else if bytes.Equal(field, transferEncoding) {
 					// Transfer-Encoding
 					p.headerCurrState = hTransferEncoding
+				} else if bytes.Equal(field, bytesConnection) {
+					// Connection
+					p.headerCurrState = hConnection
 				} else {
 					// general
 					p.headerCurrState = hGeneral
@@ -315,13 +322,19 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				return i, nil
 			}
 
+			hValue := buf[i : i+end]
 			if setting.HeaderValue != nil {
-				setting.HeaderValue(p, buf[i:i+end])
+				setting.HeaderValue(p, hValue)
 			}
 
 			switch p.headerCurrState {
+			case hConnection:
+				switch {
+				case bytes.Index(hValue, bytesClose) != -1:
+					p.hasClose = true
+				}
 			case hContentLength:
-				n, err := strconv.Atoi(BytesToString(buf[i : i+end]))
+				n, err := strconv.Atoi(BytesToString(hValue))
 				if err != nil {
 					return i, err
 				}
@@ -330,7 +343,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				p.hasContentLength = true
 				p.headerCurrState = hGeneral
 			case hTransferEncoding:
-				pos := bytes.Index(buf[i:i+end], chunked)
+				pos := bytes.Index(hValue, chunked)
 				// 没有chunked值，归类到通用http header
 				if pos == -1 {
 					p.headerCurrState = hGeneral
@@ -385,6 +398,11 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			if p.hasTransferEncoding {
 				currState = chunkedSizeStart
+				continue
+			}
+
+			if p.hasClose {
+				currState = messageDone
 			}
 
 		case httpBody:

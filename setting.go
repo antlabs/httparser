@@ -30,6 +30,10 @@ const (
 
 type state uint8
 
+func (s state) String() string {
+	return stateTab[s]
+}
+
 const (
 	// request状态
 	startReq state = iota + 1
@@ -131,4 +135,5 @@ const (
 	hGeneral headerState = iota
 	hContentLength
 	hTransferEncoding
+	hConnection
 )

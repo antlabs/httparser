@@ -1,8 +1,10 @@
 package httparser
 
-import "testing"
+import (
+	"testing"
+)
 
-var data = []byte(
+var benchData = []byte(
 	"POST /joyent/http-parser HTTP/1.1\r\n" +
 		"Host: github.com\r\n" +
 		"DNT: 1\r\n" +
@@ -34,7 +36,11 @@ func Benchmark_Parser(b *testing.B) {
 	p := New(REQUEST)
 
 	for i := 0; i < b.N; i++ {
-		p.Execute(&setting, data)
+		_, err := p.Execute(&setting, benchData)
+		if err != nil {
+			panic(err.Error())
+			return
+		}
 		p.Reset()
 	}
 }
