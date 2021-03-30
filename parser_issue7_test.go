@@ -7,35 +7,18 @@ import (
 	"time"
 )
 
-func TestServerParserContentLength(t *testing.T) {
-	var data []byte
-	//data := []byte("POST /echo HTTP/1.1\r\n\r\n")
-	//data := []byte("POST /echo HTTP/1.1\r\n\r\n")
-	data = []byte("POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nAccept-Encoding : gzip \r\n\r\n")
-	testParser(t, data)
+func TestServerParser(t *testing.T) {
 
-	//data = []byte("POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nContent-Length :  0\r\nAccept-Encoding : gzip \r\n\r\n")
-	//testParser(t, data)
-	/*
-
-		data = []byte("POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nContent-Length :  5\r\nAccept-Encoding : gzip \r\n\r\nhello")
-		testParser(t, data)
-	*/
+	for _, testData := range [][]byte{
+		[]byte("POST /echo HTTP/1.1\r\n\r\n"),
+		[]byte("POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nAccept-Encoding : gzip \r\n\r\n"),
+		[]byte("POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nContent-Length :  5\r\nAccept-Encoding : gzip \r\n\r\nhello"),
+		[]byte("POST / HTTP/1.1\r\nHost: localhost:1235\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nAccept-Encoding: gzip\r\n\r\n4\r\nbody\r\n0\r\n\r\n"),
+		//[]byte("POST / HTTP/1.1\r\nHost: localhost:1235\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nTrailer: Md5,Size\r\nAccept-Encoding: gzip\r\n\r\n4\r\nbody\r\n0\r\nMd5: 841a2d689ad86bd1611447453c22c6fc\r\nSize: 4\r\n\r\n"),
+	} {
+		testParser(t, testData)
+	}
 }
-
-/*
-func TestServerParserChunks(t *testing.T) {
-	data := []byte("POST / HTTP/1.1\r\nHost: localhost:1235\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nAccept-Encoding: gzip\r\n\r\n4\r\nbody\r\n0\r\n\r\n")
-	testParser(t, data)
-}
-*/
-
-/*
-func TestServerParserTrailer(t *testing.T) {
-	data := []byte("POST / HTTP/1.1\r\nHost: localhost:1235\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nTrailer: Md5,Size\r\nAccept-Encoding: gzip\r\n\r\n4\r\nbody\r\n0\r\nMd5: 841a2d689ad86bd1611447453c22c6fc\r\nSize: 4\r\n\r\n")
-	testParser(t, data)
-}
-*/
 
 func testParser(t *testing.T, data []byte) error {
 	setting := Setting{
