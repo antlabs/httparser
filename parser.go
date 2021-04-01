@@ -15,7 +15,6 @@ var (
 	ErrHeaderOverflow  = errors.New("http header overflow")
 	ErrNoEndLF         = errors.New("http there is no end symbol")
 	ErrChunkSize       = errors.New("http wrong chunk size")
-	ErrTrailerPart     = errors.New("http trailer-part is not supported")
 	ErrReqMethod       = errors.New("http request wrong method")
 	ErrRequestLineCRLF = errors.New("http request line wrong CRLF")
 )
@@ -30,22 +29,24 @@ var (
 	chunked                = []byte("chunked")
 	bytesConnection        = []byte("Connection")
 	bytesClose             = []byte("close")
+	bytesTrailer           = []byte("Trailer")
 	MaxHeaderSize    int32 = 4096 //默认http header单行最大限制为4k
 )
 
 // http 1.1 or http 1.0解析器
 type Parser struct {
-	pType               ReqOrRsp    //解析器的属性
-	currState           state       //记录当前状态
-	headerCurrState     headerState //记录http field状态
-	major               uint8       //主版本号
-	minor               uint8       //次版本号
-	MaxHeaderSize       int32       //最大头长度
-	contentLength       int32       //content-length 值
-	StatusCode          uint16      //状态码
-	hasContentLength    bool        //设置Content-Length头部
-	hasTransferEncoding bool        //transferEncoding头部
-	hasClose            bool        // Connection: close
+	pType               ReqOrRsp     //解析器的类型，解析请求还是响应
+	currState           state        //记录当前状态
+	headerCurrState     headerState  //记录http field状态
+	major               uint8        //主版本号
+	minor               uint8        //次版本号
+	MaxHeaderSize       int32        //最大头长度
+	contentLength       int32        //content-length 值
+	StatusCode          uint16       //状态码
+	hasContentLength    bool         //设置Content-Length头部
+	hasTransferEncoding bool         //transferEncoding头部
+	hasClose            bool         // Connection: close
+	trailing            trailerState //trailer的状态
 	userData            interface{}
 }
 
@@ -290,6 +291,9 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				} else if bytes.Equal(field, bytesConnection) {
 					// Connection
 					p.headerCurrState = hConnection
+				} else if bytes.Equal(field, bytesTrailer) {
+					// Trailer
+					p.trailing = findTrailerHeader
 				} else {
 					// general
 					p.headerCurrState = hGeneral
@@ -375,6 +379,11 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				return i, ErrNoEndLF
 			}
 
+			if p.trailing == parserTrailer {
+				currState = messageDone
+				goto reExec
+			}
+
 			if setting.HeadersComplete != nil {
 				setting.HeadersComplete(p)
 			}
@@ -457,15 +466,18 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 		case chunkedSizeAlmostDone:
 			if p.contentLength == 0 {
 
-				//fmt.Printf("--->%d:%x:(%s)\n", buf[i], buf[i], buf[i:])
-				//return 0, ErrTrailerPart
+				if p.trailing == findTrailerHeader {
+					p.trailing = parserTrailer
+					currState = headerField
+					continue
+				}
 
 				if setting.MessageComplete != nil {
 					setting.MessageComplete(p)
 				}
-				currState = messageDone
 
-				continue
+				currState = messageDone
+				goto reExec
 			}
 
 			chunkDataStartIndex = i + 1
@@ -498,7 +510,6 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			currState = newState(p.pType)
 			p.Reset()
-			goto reExec
 		}
 
 	}
@@ -530,6 +541,7 @@ func (p *Parser) Reset() {
 	p.StatusCode = 0
 	p.hasContentLength = false
 	p.hasTransferEncoding = false
+	p.trailing = defaultTrailer
 }
 
 // debug专用
