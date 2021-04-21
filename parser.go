@@ -69,10 +69,19 @@ func (p *Parser) Init(t ReqOrRsp) {
 
 }
 
-// 一般情况，可以使用Setting里面函数闭包特性捕获变量
-// 有时候了节约内存，使用普通函数，这时候用户数据可以放到p.userData里面
+// 一般情况，可以使用Setting里面函数闭包特性捕获调用者私有变量
+// 好像提供SetUserData没有必要性
+// 但是从
+// 1.节约内存角度
+// 2.数据和行为解耦的角度，提供一个Setting函数集，通过SetUserData，保存调用者私有变量
+// 通过GetUserData拿需要的变量，还是比较爽的，不需要写一堆闭包
 func (p *Parser) SetUserData(d interface{}) {
 	p.userData = d
+}
+
+// 获取SetuserData函数设置的私有变量
+func (p *Parser) GetUserData() interface{} {
+	return p.userData
 }
 
 // Execute传递setting参数, 该API 设计成现有形式有如下原因:
