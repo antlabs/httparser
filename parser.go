@@ -38,8 +38,8 @@ type Parser struct {
 	pType               ReqOrRsp     //解析器的类型，解析请求还是响应
 	currState           state        //记录当前状态
 	headerCurrState     headerState  //记录http field状态
-	major               uint8        //主版本号
-	minor               uint8        //次版本号
+	Major               uint8        //主版本号
+	Minor               uint8        //次版本号
 	MaxHeaderSize       int32        //最大头长度
 	contentLength       int32        //content-length 值
 	StatusCode          uint16       //状态码
@@ -63,8 +63,8 @@ func (p *Parser) Init(t ReqOrRsp) {
 	p.currState = newState(t)
 
 	p.pType = t
-	p.major = 0
-	p.minor = 0
+	p.Major = 0
+	p.Minor = 0
 	p.MaxHeaderSize = MaxHeaderSize
 
 }
@@ -180,9 +180,20 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				currState = reqHTTPVersion
 			}
 		case reqHTTPVersion:
+			if c == '/' {
+				currState = reqHTTPVersionMajor
+			}
+		case reqHTTPVersionMajor:
+			p.Major = c - '0'
+			currState = reqHTTPVersionDot
+		case reqHTTPVersionDot:
+			currState = reqHTTPVersionMinor
+		case reqHTTPVersionMinor:
 			if c == '\r' {
 				currState = reqRequestLineAlomstDone
+				continue
 			}
+			p.Minor = c - '0'
 
 		case reqRequestLineAlomstDone:
 			if c != '\n' {
@@ -220,8 +231,8 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				return 0, ErrHTTPVersionNum
 			}
 
-			p.major = buf[i] - '0'
-			p.minor = buf[i+2] - '0'
+			p.Major = buf[i] - '0'
+			p.Minor = buf[i+2] - '0'
 			i += 2 // 3-1
 			currState = rspStatusCode
 
@@ -543,8 +554,8 @@ func newState(t ReqOrRsp) state {
 func (p *Parser) Reset() {
 	p.currState = newState(p.pType)
 	p.headerCurrState = hGeneral
-	p.major = 0
-	p.minor = 0
+	p.Major = 0
+	p.Minor = 0
 	//p.MaxHeaderSize
 	p.contentLength = 0
 	p.StatusCode = 0

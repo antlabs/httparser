@@ -21,8 +21,8 @@ func Test_ParserResponse_StatusLine(t *testing.T) {
 	}, rsp)
 
 	assert.NoError(t, err)
-	assert.Equal(t, p.major, uint8(1))
-	assert.Equal(t, p.minor, uint8(1))
+	assert.Equal(t, p.Major, uint8(1))
+	assert.Equal(t, p.Minor, uint8(1))
 	assert.True(t, messageBegin)
 }
 
@@ -43,8 +43,8 @@ func Test_ParserResponse_HeaderField(t *testing.T) {
 	}, rsp)
 
 	assert.NoError(t, err)
-	assert.Equal(t, p.major, uint8(1))
-	assert.Equal(t, p.minor, uint8(1))
+	assert.Equal(t, p.Major, uint8(1))
+	assert.Equal(t, p.Minor, uint8(1))
 	assert.True(t, messageBegin)
 }
 
@@ -67,8 +67,8 @@ func Test_ParserResponse_HeaderValue(t *testing.T) {
 	}, rsp)
 
 	assert.NoError(t, err)
-	assert.Equal(t, p.major, uint8(1))
-	assert.Equal(t, p.minor, uint8(1))
+	assert.Equal(t, p.Major, uint8(1))
+	assert.Equal(t, p.Minor, uint8(1))
 	assert.True(t, messageBegin)
 }
 
@@ -95,8 +95,8 @@ func Test_ParserResponse_Multiple_HeaderValue(t *testing.T) {
 	}, rsp)
 
 	assert.NoError(t, err)
-	assert.Equal(t, p.major, uint8(1))
-	assert.Equal(t, p.minor, uint8(1))
+	assert.Equal(t, p.Major, uint8(1))
+	assert.Equal(t, p.Minor, uint8(1))
 	assert.Equal(t, field, []string{"Content-Length", "Connection"})
 	assert.Equal(t, fieldValue, []string{"10", "close"})
 	assert.True(t, messageBegin)
@@ -138,8 +138,8 @@ func Test_ParserResponse_Content_Length_Body(t *testing.T) {
 	}
 
 	assert.Equal(t, rcvBuf, append(rsp[1], rsp[2]...))
-	assert.Equal(t, p.major, uint8(1))
-	assert.Equal(t, p.minor, uint8(1))
+	assert.Equal(t, p.Major, uint8(1))
+	assert.Equal(t, p.Minor, uint8(1))
 	assert.True(t, messageBegin)
 }
 
@@ -189,8 +189,8 @@ func Test_ParserResponse_Chunked(t *testing.T) {
 	}
 
 	assert.Equal(t, rcvBuf, []byte("MozillaDeveloperNetworknew year"))
-	assert.Equal(t, p.major, uint8(1))
-	assert.Equal(t, p.minor, uint8(1))
+	assert.Equal(t, p.Major, uint8(1))
+	assert.Equal(t, p.Minor, uint8(1))
 	assert.True(t, messageBegin)
 	assert.Equal(t, sentTotal, parserTotal)
 	assert.True(t, p.Eof())

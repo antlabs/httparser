@@ -50,9 +50,18 @@ func (m *message) eq(t *testing.T, m2 *message) bool {
 		return false
 	}
 
-	assert.Equal(t, m.httpMajor, m2.httpMajor)
-	assert.Equal(t, m.httpMinor, m2.httpMinor)
-	assert.Equal(t, m.hType, m2.hType)
+	b = assert.Equal(t, m.httpMajor, m2.httpMajor, "major")
+	if !b {
+		return false
+	}
+	b = assert.Equal(t, m.httpMinor, m2.httpMinor, "minor")
+	if !b {
+		return false
+	}
+	b = assert.Equal(t, m.hType, m2.hType)
+	if !b {
+		return false
+	}
 	return true
 }
 
@@ -112,11 +121,14 @@ var settingTest Setting = Setting{
 	MessageComplete: func(p *Parser) {
 		m := p.GetUserData().(*message)
 		m.messageCompleteCbCalled = true
+		m.httpMajor = uint16(p.Major)
+		m.httpMinor = uint16(p.Minor)
 	},
 }
 
-func parse(p *Parser, data string) {
-	p.Execute(&settingTest, []byte(data))
+func parse(p *Parser, data string) error {
+	_, err := p.Execute(&settingTest, []byte(data))
+	return err
 }
 
 func test_Message(t *testing.T, m *message) {
@@ -129,21 +141,23 @@ func test_Message(t *testing.T, m *message) {
 		msg2Message := m.raw[msg1len:]
 
 		if msg1len > 0 {
-			parse(p, msg1Message)
+			err := parse(p, msg1Message)
+			assert.NoError(t, err)
 		}
 
-		parse(p, msg2Message)
+		err := parse(p, msg2Message)
+		assert.NoError(t, err)
 		if b := m.eq(t, got); !b {
+			t.Logf("test case name:%s\n", m.name)
 			break
 		}
 
 	}
 }
 
-/*
 func Test_Message(t *testing.T) {
 	for _, req := range requests {
-		test_Message(t, &req)
+		//test_Message(t, &req)
+		_ = req
 	}
 }
-*/

@@ -149,8 +149,8 @@ func Test_ParserResponse_Chunked_Both(t *testing.T) {
 	}
 
 	assert.Equal(t, rcvBuf, []byte("MozillaDeveloperNetworknew year"))
-	assert.Equal(t, p.major, uint8(1))
-	assert.Equal(t, p.minor, uint8(1))
+	assert.Equal(t, p.Major, uint8(1))
+	assert.Equal(t, p.Minor, uint8(1))
 	assert.True(t, messageBegin)
 	assert.Equal(t, sentTotal, parserTotal)
 	assert.True(t, p.Eof())

@@ -47,6 +47,13 @@ const (
 	reqURLAfterSP
 	//
 	reqHTTPVersion
+	// HTTP-Version中的major
+	reqHTTPVersionMajor
+	// HTTP-Version中的.
+	reqHTTPVersionDot
+	// HTTP-Version中的minor
+	reqHTTPVersionMinor
+
 	// request-line \r的位置
 	reqRequestLineAlomstDone
 	// response状态
@@ -104,6 +111,9 @@ var stateTab = []string{
 	reqURL:                   "reqURL",
 	reqURLAfterSP:            "reqURLAfterSP",
 	reqHTTPVersion:           "reqHTTPVersion",
+	reqHTTPVersionMajor:      "reqHTTPVersionMajor",
+	reqHTTPVersionDot:        "reqHTTPVersionDot",
+	reqHTTPVersionMinor:      "reqHTTPVersionMinor",
 	reqRequestLineAlomstDone: "reqRequestLineAlomstDone",
 	startRsp:                 "startRsp",
 	rspHTTP:                  "rspHTTP",
