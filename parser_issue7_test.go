@@ -18,39 +18,39 @@ func TestServerParserRequest_Trailer(t *testing.T) {
 }
 */
 
-func TestServerParserRequest(t *testing.T) {
-
-	for _, testData := range [][]byte{
-		[]byte("POST /echo HTTP/1.1\r\n\r\n"),
-		[]byte("POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nAccept-Encoding : gzip \r\n\r\n"),
-		[]byte("POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nContent-Length :  5\r\nAccept-Encoding : gzip \r\n\r\nhello"),
-		[]byte("POST / HTTP/1.1\r\nHost: localhost:1235\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nAccept-Encoding: gzip\r\n\r\n4\r\nbody\r\n0\r\n\r\n"),
-		[]byte("GET /test HTTP/1.1\r\n" +
-			"User-Agent: curl/7.18.0 (i486-pc-linux-gnu) libcurl/7.18.0 OpenSSL/0.9.8g zlib/1.2.3.3 libidn/1.1\r\n" +
-			"Host: 0.0.0.0=5000\r\n" +
-			"Accept: */*\r\n" +
-			"\r\n"),
-		[]byte("GET /favicon.ico HTTP/1.1\r\n" +
-			"Host: 0.0.0.0=5000\r\n" +
-			"User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0\r\n" +
-			"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" +
-			"Accept-Language: en-us,en;q=0.5\r\n" +
-			"Accept-Encoding: gzip,deflate\r\n" +
-			"Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7\r\n" +
-			"Keep-Alive: 300\r\n" +
-			"Connection: keep-alive\r\n" +
-			"\r\n"),
-		[]byte("GET /dumbluck HTTP/1.1\r\n" +
-			"aaaaaaaaaaaaa:++++++++++\r\n" +
-			"\r\n"),
-		[]byte("GET /forums/1/topics/2375?page=1#posts-17408 HTTP/1.1\r\n" +
-			"\r\n"),
-		[]byte("GET /get_no_headers_no_body/world HTTP/1.1\r\n" +
-			"\r\n"),
-	} {
-		testParser(t, testData)
-	}
-}
+//func TestServerParserRequest(t *testing.T) {
+//
+//	for _, testData := range [][]byte{
+//		[]byte("POST /echo HTTP/1.1\r\n\r\n"),
+//		[]byte("POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nAccept-Encoding : gzip \r\n\r\n"),
+//		[]byte("POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nContent-Length :  5\r\nAccept-Encoding : gzip \r\n\r\nhello"),
+//		[]byte("POST / HTTP/1.1\r\nHost: localhost:1235\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nAccept-Encoding: gzip\r\n\r\n4\r\nbody\r\n0\r\n\r\n"),
+//		[]byte("GET /test HTTP/1.1\r\n" +
+//			"User-Agent: curl/7.18.0 (i486-pc-linux-gnu) libcurl/7.18.0 OpenSSL/0.9.8g zlib/1.2.3.3 libidn/1.1\r\n" +
+//			"Host: 0.0.0.0=5000\r\n" +
+//			"Accept: */*\r\n" +
+//			"\r\n"),
+//		[]byte("GET /favicon.ico HTTP/1.1\r\n" +
+//			"Host: 0.0.0.0=5000\r\n" +
+//			"User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0\r\n" +
+//			"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" +
+//			"Accept-Language: en-us,en;q=0.5\r\n" +
+//			"Accept-Encoding: gzip,deflate\r\n" +
+//			"Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7\r\n" +
+//			"Keep-Alive: 300\r\n" +
+//			"Connection: keep-alive\r\n" +
+//			"\r\n"),
+//		[]byte("GET /dumbluck HTTP/1.1\r\n" +
+//			"aaaaaaaaaaaaa:++++++++++\r\n" +
+//			"\r\n"),
+//		[]byte("GET /forums/1/topics/2375?page=1#posts-17408 HTTP/1.1\r\n" +
+//			"\r\n"),
+//		[]byte("GET /get_no_headers_no_body/world HTTP/1.1\r\n" +
+//			"\r\n"),
+//	} {
+//		testParser(t, testData)
+//	}
+//}
 
 func testParser(t *testing.T, data []byte) error {
 	setting := Setting{

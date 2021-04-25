@@ -58,10 +58,17 @@ func (m *message) eq(t *testing.T, m2 *message) bool {
 	if !b {
 		return false
 	}
-	b = assert.Equal(t, m.hType, m2.hType)
+	b = assert.Equal(t, m.hType, m2.hType, "htype")
 	if !b {
 		return false
 	}
+
+	/*
+		b = assert.Equal(t, m.requestUrl, m2.requestUrl, "request url")
+		if !b {
+			return false
+		}
+	*/
 	return true
 }
 
@@ -93,10 +100,11 @@ var settingTest Setting = Setting{
 	MessageBegin: func(p *Parser) {
 		m := p.GetUserData().(*message)
 		m.messageBeginCbCalled = true
+		m.hType = p.hType
 	},
 	URL: func(p *Parser, url []byte) {
 		m := p.GetUserData().(*message)
-		m.requestUrl = string(url)
+		m.requestUrl += string(url)
 	},
 	Status: func(p *Parser, status []byte) {
 		m := p.GetUserData().(*message)
@@ -123,12 +131,12 @@ var settingTest Setting = Setting{
 		m.messageCompleteCbCalled = true
 		m.httpMajor = uint16(p.Major)
 		m.httpMinor = uint16(p.Minor)
+
 	},
 }
 
-func parse(p *Parser, data string) error {
-	_, err := p.Execute(&settingTest, []byte(data))
-	return err
+func parse(p *Parser, data string) (int, error) {
+	return p.Execute(&settingTest, []byte(data))
 }
 
 func test_Message(t *testing.T, m *message) {
@@ -140,15 +148,22 @@ func test_Message(t *testing.T, m *message) {
 		msg1Message := m.raw[:msg1len]
 		msg2Message := m.raw[msg1len:]
 
+		var (
+			n1   int
+			err1 error
+		)
 		if msg1len > 0 {
-			err := parse(p, msg1Message)
-			assert.NoError(t, err)
+			n1, err1 = parse(p, msg1Message)
+			assert.NoError(t, err1)
+			msg1Message = msg1Message[n1:]
 		}
 
-		err := parse(p, msg2Message)
+		_, err := parse(p, msg1Message+msg2Message)
 		assert.NoError(t, err)
 		if b := m.eq(t, got); !b {
-			t.Logf("test case name:%s\n", m.name)
+			t.Logf("msg1.len:%d, msg2.len:%d, test case name:%s\n", len(msg1Message), len(msg2Message), m.name)
+			t.Logf("msg1len:%d, msg1(%s)", msg1len, msg1Message)
+			t.Logf("msg2(%s)", msg2Message)
 			break
 		}
 
@@ -157,7 +172,7 @@ func test_Message(t *testing.T, m *message) {
 
 func Test_Message(t *testing.T) {
 	for _, req := range requests {
-		//test_Message(t, &req)
+		test_Message(t, &req)
 		_ = req
 	}
 }

@@ -35,7 +35,7 @@ var (
 
 // http 1.1 or http 1.0解析器
 type Parser struct {
-	pType               ReqOrRsp     //解析器的类型，解析请求还是响应
+	hType               ReqOrRsp     //解析器的类型，解析请求还是响应
 	currState           state        //记录当前状态
 	headerCurrState     headerState  //记录http field状态
 	Major               uint8        //主版本号
@@ -62,7 +62,7 @@ func (p *Parser) Init(t ReqOrRsp) {
 
 	p.currState = newState(t)
 
-	p.pType = t
+	p.hType = t
 	p.Major = 0
 	p.Minor = 0
 	p.MaxHeaderSize = MaxHeaderSize
@@ -330,6 +330,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			if c == ' ' || c == '\t' {
 				continue
 			}
+			goto reExec
 
 			// 解析http value
 		case headerValue:
@@ -431,6 +432,14 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				continue
 			}
 
+			if p.contentLength == 0 {
+				if setting.MessageComplete != nil {
+					currState = newState(p.hType)
+					setting.MessageComplete(p)
+				}
+				continue
+			}
+
 			if p.Eof() {
 				currState = messageDone
 			}
@@ -528,7 +537,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				continue
 			}
 
-			currState = newState(p.pType)
+			currState = newState(p.hType)
 			p.Reset()
 		}
 
@@ -552,7 +561,7 @@ func newState(t ReqOrRsp) state {
 }
 
 func (p *Parser) Reset() {
-	p.currState = newState(p.pType)
+	p.currState = newState(p.hType)
 	p.headerCurrState = hGeneral
 	p.Major = 0
 	p.Minor = 0
@@ -570,7 +579,7 @@ func (p *Parser) Status() string {
 }
 
 func (p *Parser) Eof() bool {
-	if p.pType == REQUEST {
+	if p.hType == REQUEST {
 		return true
 	}
 
