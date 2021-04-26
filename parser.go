@@ -302,16 +302,16 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			c2 := c | 0x20
 			if c2 == 'c' || c2 == 't' {
-				if bytes.Equal(field, contentLength) {
+				if bytes.EqualFold(field, contentLength) {
 					// Content-Length
 					p.headerCurrState = hContentLength
-				} else if bytes.Equal(field, transferEncoding) {
+				} else if bytes.EqualFold(field, transferEncoding) {
 					// Transfer-Encoding
 					p.headerCurrState = hTransferEncoding
-				} else if bytes.Equal(field, bytesConnection) {
+				} else if bytes.EqualFold(field, bytesConnection) {
 					// Connection
 					p.headerCurrState = hConnection
-				} else if bytes.Equal(field, bytesTrailer) {
+				} else if bytes.EqualFold(field, bytesTrailer) {
 					// Trailer
 					p.trailing = findTrailerHeader
 				} else {
@@ -456,7 +456,14 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 					currState = messageDone
 				}
 
-				i += int(nread)
+				i += int(nread) - 1
+
+				// httpBody没有后继结点,所以这里发现数据消费完, 调用下MessageComplete方法
+				if p.contentLength == 0 {
+					if setting.MessageComplete != nil {
+						setting.MessageComplete(p)
+					}
+				}
 			}
 
 		case chunkedSizeStart:
@@ -541,6 +548,12 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			p.Reset()
 		}
 
+	}
+
+	if currState == reqURL {
+		if setting.URL != nil {
+			setting.URL(p, buf[urlStartIndex:len(buf)])
+		}
 	}
 
 	p.currState = currState

@@ -63,12 +63,16 @@ func (m *message) eq(t *testing.T, m2 *message) bool {
 		return false
 	}
 
-	/*
-		b = assert.Equal(t, m.requestUrl, m2.requestUrl, "request url")
-		if !b {
-			return false
-		}
-	*/
+	b = assert.Equal(t, m.requestUrl, m2.requestUrl, "request url")
+	if !b {
+		return false
+	}
+
+	b = assert.Equal(t, m.body, m2.body, "body")
+	if !b {
+		return false
+	}
+
 	return true
 }
 
@@ -93,6 +97,122 @@ var requests = []message{
 			{"Host", "0.0.0.0=5000"},
 			{"Accept", "*/*"},
 		},
+	},
+	{
+		name:  "firefox get",
+		hType: REQUEST,
+		raw: "GET /favicon.ico HTTP/1.1\r\n" +
+			"Host: 0.0.0.0=5000\r\n" +
+			"User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0\r\n" +
+			"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" +
+			"Accept-Language: en-us,en;q=0.5\r\n" +
+			"Accept-Encoding: gzip,deflate\r\n" +
+			"Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7\r\n" +
+			"Keep-Alive: 300\r\n" +
+			"Connection: keep-alive\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_GET,
+		requestUrl:    "/favicon.ico",
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Host", "0.0.0.0=5000"},
+			{"User-Agent", "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0"},
+			{"Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"},
+			{"Accept-Language", "en-us,en;q=0.5"},
+			{"Accept-Encoding", "gzip,deflate"},
+			{"Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7"},
+			{"Keep-Alive", "300"},
+			{"Connection", "keep-alive"},
+		},
+	},
+	{
+		name:  "dumbluck",
+		hType: REQUEST,
+		raw: "GET /dumbluck HTTP/1.1\r\n" +
+			"aaaaaaaaaaaaa:++++++++++\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_GET,
+		requestUrl:    "/dumbluck",
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"aaaaaaaaaaaaa", "++++++++++"},
+		},
+	},
+	{
+		name:  "fragment in url",
+		hType: REQUEST,
+		raw: "GET /forums/1/topics/2375?page=1#posts-17408 HTTP/1.1\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_GET,
+		requestUrl:    "/forums/1/topics/2375?page=1#posts-17408",
+		contentLength: math.MaxUint64,
+	},
+	{
+		name:  "get no headers no body",
+		hType: REQUEST,
+		raw: "GET /get_no_headers_no_body/world HTTP/1.1\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_GET,
+		requestUrl:    "/get_no_headers_no_body/world",
+		contentLength: math.MaxUint64,
+	},
+	{
+		name:  "get one header no body",
+		hType: REQUEST,
+		raw: "GET /get_one_header_no_body HTTP/1.1\r\n" +
+			"Accept: */*\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_GET,
+		requestUrl:    "/get_one_header_no_body",
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Accept", "*/*"},
+		},
+	},
+	{
+		name:  "get funky content length body hello",
+		hType: REQUEST,
+		raw: "GET /get_funky_content_length_body_hello HTTP/1.0\r\n" +
+			"conTENT-Length: 5\r\n" +
+			"\r\n" +
+			"HELLO",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            0,
+		//method: HTTP_GET,
+		requestUrl:    "/get_funky_content_length_body_hello",
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"conTENT-Length", "5"},
+		},
+		body: "HELLO",
 	},
 }
 

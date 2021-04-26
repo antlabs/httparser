@@ -5,6 +5,7 @@ type Setting struct {
 	// 解析开始
 	MessageBegin func(*Parser)
 	// url 回调函数, 只有在request包才会回调
+	// 解析一个包时,URL回调可能会多次调用
 	URL func(*Parser, []byte)
 	// 状态短语
 	Status func(*Parser, []byte)
