@@ -24,7 +24,7 @@ func Test_ParserResponse_RequestBody_BOTH(t *testing.T) {
 			"Referer: https://github.com/joyent/http-parser\r\n" +
 			"Connection: keep-alive\r\n" +
 			"Transfer-Encoding: chunked\r\n" +
-			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n")
+			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n\r\n")
 
 	messageBegin := false
 	messageComplete := false

@@ -48,7 +48,7 @@ func Test_ParserResponse_RequestBody(t *testing.T) {
 			"Referer: https://github.com/joyent/http-parser\r\n" +
 			"Connection: keep-alive\r\n" +
 			"Transfer-Encoding: chunked\r\n" +
-			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n")
+			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n\r\n")
 
 	messageBegin := false
 	messageComplete := false
@@ -145,7 +145,7 @@ func Test_ParserResponse_RequestBody2(t *testing.T) {
 			"Referer: https://github.com/joyent/http-parser\r\n" +
 			"Connection: keep-alive\r\n" +
 			"Transfer-Encoding: chunked\r\n" +
-			"Cache-Control: max-age=0\r\n\r\n10\r\nhello world12345\r\n0\r\n")
+			"Cache-Control: max-age=0\r\n\r\n10\r\nhello world12345\r\n0\r\n\r\n")
 
 	messageBegin := false
 	messageComplete := false
@@ -240,7 +240,7 @@ func Test_ParserRequest_chunked_segment(t *testing.T) {
 			"Referer: https://github.com/joyent/http-parser\r\n" +
 			"Connection: keep-alive\r\n" +
 			"Transfer-Encoding: chunked\r\n" +
-			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n" +
+			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n\r\n" +
 			"POST /joyent/http-parser HTTP/1.1\r\n" +
 			"Host: github.com\r\n" +
 			"DNT: 1\r\n" +
@@ -254,7 +254,7 @@ func Test_ParserRequest_chunked_segment(t *testing.T) {
 			"Referer: https://github.com/joyent/http-parser\r\n" +
 			"Connection: keep-alive\r\n" +
 			"Transfer-Encoding: chunked\r\n" +
-			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n")
+			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n\r\n")
 
 	var body []byte
 	var setting = Setting{

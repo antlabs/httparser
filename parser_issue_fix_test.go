@@ -22,7 +22,7 @@ func Test_Isuse1(t *testing.T) {
 			"Referer: https://github.com/joyent/http-parser\r\n" +
 			"Connection: keep-alive\r\n" +
 			"Transfer-Encoding: chunked\r\n" +
-			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n" +
+			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n\r\n" +
 
 			"POST /joyent/http-parser HTTP/1.1\r\n" +
 			"Host: github.com\r\n" +
@@ -37,7 +37,7 @@ func Test_Isuse1(t *testing.T) {
 			"Referer: https://github.com/joyent/http-parser\r\n" +
 			"Connection: keep-alive\r\n" +
 			"Transfer-Encoding: chunked\r\n" +
-			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n")
+			"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n\r\n")
 
 	body := []byte{}
 	var setting = Setting{
@@ -59,6 +59,8 @@ func Test_Isuse1(t *testing.T) {
 			body = append(body, buf...)
 		},
 		MessageComplete: func(p *Parser) {
+			fmt.Printf("%#v\n", p)
+			p.Reset()
 		},
 	}
 
@@ -66,12 +68,12 @@ func Test_Isuse1(t *testing.T) {
 	fmt.Printf("req_len=%d\n", len(data)/2)
 	// 一个POST 518，一共两个POST，第一次解析600字节，第二次解析剩余的
 	data1, data2 := data[:600], data[600:]
-	_, err := p.Execute(&setting, data1)
+	n, err := p.Execute(&setting, data1)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	_, err = p.Execute(&setting, data2)
+	_, err = p.Execute(&setting, append(data1[n:], data2...))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -117,7 +119,7 @@ func Test_Issue2(t *testing.T) {
 			body = append(body, buf...)
 		},
 		MessageComplete: func(p *Parser) {
-			fmt.Println("---- complete")
+			p.Reset()
 		},
 	}
 

@@ -88,6 +88,7 @@ func testParser(t *testing.T, data []byte) error {
 		HeadersComplete: func(*Parser) {},
 		Body:            func(*Parser, []byte) {},
 		MessageComplete: func(*Parser) {
+			p.Reset()
 			nRequest++
 		},
 	}

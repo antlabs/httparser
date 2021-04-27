@@ -214,6 +214,100 @@ var requests = []message{
 		},
 		body: "HELLO",
 	},
+	{
+		name:  "post identity body world",
+		hType: REQUEST,
+		raw: "POST /post_identity_body_world?q=search#hey HTTP/1.1\r\n" +
+			"Accept: */*\r\n" +
+			"Content-Length: 5\r\n" +
+			"\r\n" +
+			"World",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_POST,
+		requestUrl:    "/post_identity_body_world?q=search#hey",
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Accept", "*/*"},
+			{"Content-Length", "5"},
+		},
+		body: "World",
+	},
+	{
+		name:  "post - chunked body: all your base are belong to us",
+		hType: REQUEST,
+		raw: "POST /post_chunked_all_your_base HTTP/1.1\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"1e\r\nall your base are belong to us\r\n" +
+			"0\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_POST,
+		requestUrl:    "/post_chunked_all_your_base",
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Transfer-Encoding", "chunked"},
+		},
+		body: "all your base are belong to us",
+	},
+	{
+		name:  "two chunks ; triple zero ending",
+		hType: REQUEST,
+		raw: "POST /two_chunks_mult_zero_end HTTP/1.1\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"5\r\nhello\r\n" +
+			"6\r\n world\r\n" +
+			"000\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_POST,
+		requestUrl:    "/two_chunks_mult_zero_end",
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Transfer-Encoding", "chunked"},
+		},
+		body: "hello world",
+	},
+	{
+		name:  "chunked with trailing headers. blech.",
+		hType: REQUEST,
+		raw: "POST /chunked_w_trailing_headers HTTP/1.1\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"5\r\nhello\r\n" +
+			"6\r\n world\r\n" +
+			"0\r\n" +
+			"Vary: *\r\n" +
+			"Content-Type: text/plain\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_POST,
+		requestUrl:    "/chunked_w_trailing_headers",
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Transfer-Encoding", "chunked"},
+			{"Vary", "*"},
+			{"Content-Type", "text/plain"},
+		},
+		body: "hello world",
+	},
 }
 
 var settingTest Setting = Setting{

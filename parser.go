@@ -29,7 +29,6 @@ var (
 	chunked                = []byte("chunked")
 	bytesConnection        = []byte("Connection")
 	bytesClose             = []byte("close")
-	bytesTrailer           = []byte("Trailer")
 	MaxHeaderSize    int32 = 4096 //默认http header单行最大限制为4k
 )
 
@@ -311,9 +310,6 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				} else if bytes.EqualFold(field, bytesConnection) {
 					// Connection
 					p.headerCurrState = hConnection
-				} else if bytes.EqualFold(field, bytesTrailer) {
-					// Trailer
-					p.trailing = findTrailerHeader
 				} else {
 					// general
 					p.headerCurrState = hGeneral
@@ -400,7 +396,11 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				return i, ErrNoEndLF
 			}
 
-			if p.trailing == parserTrailer {
+			if p.trailing == needParserTrailer {
+				if setting.MessageComplete != nil {
+					setting.MessageComplete(p)
+				}
+
 				currState = messageDone
 				goto reExec
 			}
@@ -502,18 +502,10 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 		case chunkedSizeAlmostDone:
 			if p.contentLength == 0 {
 
-				if p.trailing == findTrailerHeader {
-					p.trailing = parserTrailer
-					currState = headerField
-					continue
-				}
+				p.trailing = needParserTrailer
+				currState = headerField
 
-				if setting.MessageComplete != nil {
-					setting.MessageComplete(p)
-				}
-
-				currState = messageDone
-				goto reExec
+				continue
 			}
 
 			chunkDataStartIndex = i + 1
@@ -551,7 +543,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 	}
 
 	if currState == reqURL {
-		if setting.URL != nil {
+		if setting.URL != nil && len(buf[urlStartIndex:len(buf)]) > 0 {
 			setting.URL(p, buf[urlStartIndex:len(buf)])
 		}
 	}
