@@ -45,7 +45,12 @@ type message struct {
 }
 
 func (m *message) eq(t *testing.T, m2 *message) bool {
-	b := assert.Equal(t, m.headers, m2.headers)
+	b := assert.Equal(t, m.messageCompleteCbCalled, m2.messageCompleteCbCalled)
+	if !b {
+		return false
+	}
+
+	b = assert.Equal(t, m.headers, m2.headers)
 	if !b {
 		return false
 	}
@@ -85,10 +90,11 @@ var requests = []message{
 			"Host: 0.0.0.0=5000\r\n" +
 			"Accept: */*\r\n" +
 			"\r\n",
-		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
-		httpMajor:            1,
-		httpMinor:            1,
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
 		//method: HTTP_GET,
 		requestUrl:    "/test",
 		contentLength: math.MaxUint64,
@@ -99,8 +105,9 @@ var requests = []message{
 		},
 	},
 	{
-		name:  "firefox get",
-		hType: REQUEST,
+		name:                    "firefox get",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
 		raw: "GET /favicon.ico HTTP/1.1\r\n" +
 			"Host: 0.0.0.0=5000\r\n" +
 			"User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0\r\n" +
@@ -131,8 +138,9 @@ var requests = []message{
 		},
 	},
 	{
-		name:  "dumbluck",
-		hType: REQUEST,
+		name:                    "dumbluck",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
 		raw: "GET /dumbluck HTTP/1.1\r\n" +
 			"aaaaaaaaaaaaa:++++++++++\r\n" +
 			"\r\n",
@@ -149,8 +157,9 @@ var requests = []message{
 		},
 	},
 	{
-		name:  "fragment in url",
-		hType: REQUEST,
+		name:                    "fragment in url",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
 		raw: "GET /forums/1/topics/2375?page=1#posts-17408 HTTP/1.1\r\n" +
 			"\r\n",
 
@@ -163,8 +172,9 @@ var requests = []message{
 		contentLength: math.MaxUint64,
 	},
 	{
-		name:  "get no headers no body",
-		hType: REQUEST,
+		name:                    "get no headers no body",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
 		raw: "GET /get_no_headers_no_body/world HTTP/1.1\r\n" +
 			"\r\n",
 
@@ -177,8 +187,9 @@ var requests = []message{
 		contentLength: math.MaxUint64,
 	},
 	{
-		name:  "get one header no body",
-		hType: REQUEST,
+		name:                    "get one header no body",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
 		raw: "GET /get_one_header_no_body HTTP/1.1\r\n" +
 			"Accept: */*\r\n" +
 			"\r\n",
@@ -195,8 +206,9 @@ var requests = []message{
 		},
 	},
 	{
-		name:  "get funky content length body hello",
-		hType: REQUEST,
+		name:                    "get funky content length body hello",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
 		raw: "GET /get_funky_content_length_body_hello HTTP/1.0\r\n" +
 			"conTENT-Length: 5\r\n" +
 			"\r\n" +
@@ -215,8 +227,9 @@ var requests = []message{
 		body: "HELLO",
 	},
 	{
-		name:  "post identity body world",
-		hType: REQUEST,
+		name:                    "post identity body world",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
 		raw: "POST /post_identity_body_world?q=search#hey HTTP/1.1\r\n" +
 			"Accept: */*\r\n" +
 			"Content-Length: 5\r\n" +
@@ -237,8 +250,9 @@ var requests = []message{
 		body: "World",
 	},
 	{
-		name:  "post - chunked body: all your base are belong to us",
-		hType: REQUEST,
+		name:                    "post - chunked body: all your base are belong to us",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
 		raw: "POST /post_chunked_all_your_base HTTP/1.1\r\n" +
 			"Transfer-Encoding: chunked\r\n" +
 			"\r\n" +
@@ -259,8 +273,9 @@ var requests = []message{
 		body: "all your base are belong to us",
 	},
 	{
-		name:  "two chunks ; triple zero ending",
-		hType: REQUEST,
+		name:                    "two chunks ; triple zero ending",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
 		raw: "POST /two_chunks_mult_zero_end HTTP/1.1\r\n" +
 			"Transfer-Encoding: chunked\r\n" +
 			"\r\n" +
@@ -282,8 +297,9 @@ var requests = []message{
 		body: "hello world",
 	},
 	{
-		name:  "chunked with trailing headers. blech.",
-		hType: REQUEST,
+		name:                    "chunked with trailing headers. blech.",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
 		raw: "POST /chunked_w_trailing_headers HTTP/1.1\r\n" +
 			"Transfer-Encoding: chunked\r\n" +
 			"\r\n" +
@@ -308,6 +324,99 @@ var requests = []message{
 		},
 		body: "hello world",
 	},
+	{
+		name:                    "with nonsense after the length",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "POST /chunked_w_nonsense_after_length HTTP/1.1\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"5; ilovew3;whattheluck=aretheseparametersfor\r\nhello\r\n" +
+			"6; blahblah; blah\r\n world\r\n" +
+			"0\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_POST,
+		requestUrl:    "/chunked_w_nonsense_after_length",
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Transfer-Encoding", "chunked"},
+		},
+		body: "hello world",
+	},
+	{
+		name:                    "with quotes",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw:                     "GET /with_\"stupid\"_quotes?foo=\"bar\" HTTP/1.1\r\n\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_POST,
+		requestUrl:    "/with_\"stupid\"_quotes?foo=\"bar\"",
+		contentLength: math.MaxUint64,
+	},
+	{
+		name:                    "apachebench get",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "GET /test HTTP/1.0\r\n" +
+			"Host: 0.0.0.0:5000\r\n" +
+			"User-Agent: ApacheBench/2.3\r\n" +
+			"Accept: */*\r\n\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            0,
+		//method: HTTP_POST,
+		requestUrl:    "/test",
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Host", "0.0.0.0:5000"},
+			{"User-Agent", "ApacheBench/2.3"},
+			{"Accept", "*/*"},
+		},
+	},
+	{
+		name:                    "query url with question mark",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw:                     "GET /test.cgi?foo=bar?baz HTTP/1.1\r\n\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_POST,
+		requestUrl:    "/test.cgi?foo=bar?baz",
+		contentLength: math.MaxUint64,
+	},
+	/* Some clients, especially after a POST in a keep-alive connection,
+	 * will send an extra CRLF before the next request
+	 */
+	/*
+		{
+			name:                    "newline prefix get",
+			hType:                   REQUEST,
+			messageCompleteCbCalled: true,
+			raw:                     "\r\nGET /test HTTP/1.1\r\n\r\n",
+
+			shouldKeepAlive:      true,
+			messageCompleteOnEof: false,
+			httpMajor:            1,
+			httpMinor:            1,
+			//method: HTTP_POST,
+			requestUrl:    "/test",
+			contentLength: math.MaxUint64,
+		},
+	*/
 }
 
 var settingTest Setting = Setting{
