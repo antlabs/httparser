@@ -401,22 +401,86 @@ var requests = []message{
 	/* Some clients, especially after a POST in a keep-alive connection,
 	 * will send an extra CRLF before the next request
 	 */
+	{
+		name:                    "newline prefix get",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw:                     "\r\nGET /test HTTP/1.1\r\n\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		//method: HTTP_POST,
+		requestUrl:    "/test",
+		contentLength: math.MaxUint64,
+	},
 	/*
 		{
-			name:                    "newline prefix get",
+			name:                    "upgrade request",
 			hType:                   REQUEST,
 			messageCompleteCbCalled: true,
-			raw:                     "\r\nGET /test HTTP/1.1\r\n\r\n",
+			raw: "GET /demo HTTP/1.1\r\n" +
+				"Host: example.com\r\n" +
+				"Connection: Upgrade\r\n" +
+				"Sec-WebSocket-Key2: 12998 5 Y3 1  .P00\r\n" +
+				"Sec-WebSocket-Protocol: sample\r\n" +
+				"Upgrade: WebSocket\r\n" +
+				"Sec-WebSocket-Key1: 4 @1  46546xW%0l 1 5\r\n" +
+				"Origin: http://example.com\r\n" +
+				"\r\n" +
+				"Hot diggity dogg",
 
 			shouldKeepAlive:      true,
 			messageCompleteOnEof: false,
 			httpMajor:            1,
 			httpMinor:            1,
 			//method: HTTP_POST,
-			requestUrl:    "/test",
+			requestUrl:    "/demo",
 			contentLength: math.MaxUint64,
+			headers: [][2]string{{"Host", "example.com"},
+				{"Connection", "Upgrade"},
+				{"Sec-WebSocket-Key2", "12998 5 Y3 1  .P00"},
+				{"Sec-WebSocket-Protocol", "sample"},
+				{"Upgrade", "WebSocket"},
+				{"Sec-WebSocket-Key1", "4 @1  46546xW%0l 1 5"},
+				{"Origin", "http://example.com"},
+			},
 		},
 	*/
+}
+
+var responses = []message{
+	{
+		name:  "HTTP 200 response with Upgrade and Transfer-Encoding header",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Connection: upgrade\r\n" +
+			"Upgrade: h2c\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"2\r\n" +
+			"bo\r\n" +
+			"2\r\n" +
+			"dy\r\n" +
+			"0\r\n" +
+			"\r\n",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		body:                    "body",
+		//method: HTTP_GET,
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Connection", "upgrade"},
+			{"Upgrade", "h2c"},
+			{"Transfer-Encoding", "chunked"},
+		},
+	},
 }
 
 var settingTest Setting = Setting{
@@ -497,5 +561,10 @@ func Test_Message(t *testing.T) {
 	for _, req := range requests {
 		test_Message(t, &req)
 		_ = req
+	}
+
+	for _, rsp := range responses {
+		test_Message(t, &rsp)
+		_ = rsp
 	}
 }

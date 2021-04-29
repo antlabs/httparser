@@ -8,6 +8,7 @@ type Setting struct {
 	// 解析一个包时,URL回调可能会多次调用
 	URL func(*Parser, []byte)
 	// 状态短语
+	// 解析一个包时, Status回调可能会多次调用
 	Status func(*Parser, []byte)
 	// http field 回调函数
 	HeaderField func(*Parser, []byte)
@@ -63,10 +64,16 @@ const (
 	rspHTTP
 	// response 版本号数字
 	rspHTTPVersionNum
+	// response 版本号后面的空格
+	rspHTTPVersionNumAfterSP
 	// response 状态吗
 	rspStatusCode
+	// statuscode后面的sp符号
+	rspStatusCodeAfterSP
 	// response状态短语
 	rspStatus
+	// 状态短语后面的SP符号
+	rspStatusAfterSP
 	// request or response状态，这里让解析器自己选择
 	startReqOrRsp
 
@@ -119,8 +126,11 @@ var stateTab = []string{
 	startRsp:                 "startRsp",
 	rspHTTP:                  "rspHTTP",
 	rspHTTPVersionNum:        "rspHTTPVersionNum",
+	rspHTTPVersionNumAfterSP: "rspHTTPVersionNumAfterSP",
 	rspStatusCode:            "rspStatusCode",
+	rspStatusCodeAfterSP:     "rspStatusCodeAfterSP",
 	rspStatus:                "rspStatus",
+	rspStatusAfterSP:         "rspStatusCodeAfterSP",
 	startReqOrRsp:            "startReqOrRsp",
 	headerDone:               "headerDone",
 	headerField:              "headerField",

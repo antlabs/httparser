@@ -119,6 +119,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 	chunkDataStartIndex := 0
 	urlStartIndex := 0
+	reasonPhraseIndex := 0
 
 	i := 0
 	c := byte(0)
@@ -140,6 +141,10 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = startReq
 			fallthrough
 		case startReq:
+			if c == '\r' || c == '\n' {
+				continue
+			}
+
 			if token[c] == 0 {
 				return 0, ErrReqMethod
 			}
@@ -210,72 +215,79 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				setting.MessageBegin(p)
 			}
 
-			currState = rspHTTP
+			p.currState, currState = rspHTTP, rspHTTP
 
 		case rspHTTP:
 			if len(buf[i:]) < len(strTTPslash) {
-				return 0, ErrHTTPVersion
+				return i, nil
 			}
 
-			if !bytes.Equal(buf[i:len(strTTPslash)+1], strTTPslash) {
+			if !bytes.Equal(buf[i:i+len(strTTPslash)], strTTPslash) {
 				return 0, ErrHTTPVersion
 			}
 
 			i += len(strTTPslash) - 1
-			currState = rspHTTPVersionNum
+			p.currState, currState = rspHTTPVersionNum, rspHTTPVersionNum
 
 		case rspHTTPVersionNum:
 			// 1.1 or 1.0 or 0.9
-			if len(buf[i:]) < 3 || !unicode.IsNumber(rune(buf[i])) || !unicode.IsNumber(rune(buf[i+2])) {
+			if len(buf[i:]) < 3 {
+				return i, nil
+			}
+
+			if !unicode.IsNumber(rune(buf[i])) || !unicode.IsNumber(rune(buf[i+2])) {
 				return 0, ErrHTTPVersionNum
 			}
 
 			p.Major = buf[i] - '0'
 			p.Minor = buf[i+2] - '0'
 			i += 2 // 3-1
-			currState = rspStatusCode
+			p.currState, currState = rspHTTPVersionNumAfterSP, rspHTTPVersionNumAfterSP
 
+		case rspHTTPVersionNumAfterSP:
+			if c == ' ' || c == '\r' || c == '\n' {
+				continue
+			}
+
+			p.currState, currState = rspStatusCode, rspStatusCode
+			goto reExec
 		case rspStatusCode:
-			for ; i < len(buf) && (buf[i] == ' ' || buf[i] == '\r' || buf[i] == '\n'); i++ {
+
+			if c >= '0' && c <= '9' {
+				p.StatusCode = uint16(int(p.StatusCode)*10 + int(c-'0'))
+				continue
 			}
 
-			for ; i < len(buf) && buf[i] >= '0' && buf[i] <= '9'; i++ {
-				p.StatusCode = uint16(int(p.StatusCode)*10 + int(buf[i]-'0'))
+			currState = rspStatusCodeAfterSP
+			goto reExec
+		case rspStatusCodeAfterSP:
+			if c == ' ' || c == '\r' || c == '\n' {
+				continue
 			}
 
-			if i >= len(buf) {
-				return 0, ErrHTTPStatus
-			}
-
-			currState = rspStatus
+			p.currState, currState = rspStatus, rspStatus
 			goto reExec
 		case rspStatus:
-			start := i
-
-			// bytes.IndexAny()
-			for ; start < len(buf) && (buf[start] == ' ' || buf[start] == '\r' || buf[start] == '\n'); start++ {
+			if reasonPhraseIndex == 0 {
+				reasonPhraseIndex = i
 			}
 
-			end := start
-			for ; end < len(buf) && !(buf[end] == ' ' || buf[end] == '\r' || buf[end] == '\n'); end++ {
+			if c == '\r' {
+				if setting.Status != nil {
+					setting.Status(p, buf[reasonPhraseIndex:i])
+				}
+				p.currState, currState = rspStatusAfterSP, rspStatusAfterSP
+				continue
 			}
 
-			if end >= len(buf) || end+1 >= len(buf) {
-				return 0, ErrRspStatusLine
+			if c == '\n' {
+				if setting.Status != nil {
+					setting.Status(p, buf[reasonPhraseIndex:i])
+				}
+				p.currState, currState = headerField, headerField
 			}
 
-			//TODO单独状态
-			switch {
-			case buf[end] == '\r' && buf[end+1] == '\n':
-				i = end + 1
-			case buf[end] == '\r' || buf[end] == '\n':
-				i = end
-			}
-
-			if setting.Status != nil {
-				setting.Status(p, buf[start:end])
-			}
-
+		case rspStatusAfterSP:
 			currState = headerField
 
 		case headerField:
@@ -542,9 +554,15 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 	}
 
-	if currState == reqURL {
+	switch currState {
+	case reqURL:
 		if setting.URL != nil && len(buf[urlStartIndex:len(buf)]) > 0 {
 			setting.URL(p, buf[urlStartIndex:len(buf)])
+		}
+
+	case rspStatus:
+		if setting.Status != nil && len(buf[reasonPhraseIndex:i]) > 0 {
+			setting.Status(p, buf[urlStartIndex:len(buf)])
 		}
 	}
 
