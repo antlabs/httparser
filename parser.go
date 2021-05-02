@@ -10,8 +10,6 @@ import (
 var (
 	ErrHTTPVersion     = errors.New("http version")
 	ErrHTTPVersionNum  = errors.New("http version number")
-	ErrHTTPStatus      = errors.New("http status")
-	ErrRspStatusLine   = errors.New("http rsp status line")
 	ErrHeaderOverflow  = errors.New("http header overflow")
 	ErrNoEndLF         = errors.New("http there is no end symbol")
 	ErrChunkSize       = errors.New("http wrong chunk size")
