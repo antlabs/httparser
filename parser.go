@@ -22,13 +22,13 @@ var (
 )
 
 var (
-	contentLength          = []byte("Content-Length")
-	transferEncoding       = []byte("Transfer-Encoding")
-	bytesChunked           = []byte("chunked")
-	bytesConnection        = []byte("Connection")
-	bytesClose             = []byte("close")
-	bytesUpgrade           = []byte("upgrade")
-	MaxHeaderSize    int32 = 4096 //默认http header单行最大限制为4k
+	bytesContentLength          = []byte("Content-Length")
+	bytesTransferEncoding       = []byte("Transfer-Encoding")
+	bytesChunked                = []byte("chunked")
+	bytesConnection             = []byte("Connection")
+	bytesClose                  = []byte("close")
+	bytesUpgrade                = []byte("upgrade")
+	MaxHeaderSize         int32 = 4096 //默认http header单行最大限制为4k
 )
 
 // http 1.1 or http 1.0解析器
@@ -84,7 +84,7 @@ func (p *Parser) GetUserData() interface{} {
 }
 
 // Execute传递setting参数, 该API 设计成现有形式有如下原因:
-// setting如果通过New函数传递, Parser内存占用会多8 * 6的byte
+// setting如果通过New函数传递, Parser内存占用会多8 * 8的byte
 // 为了减小Parser的大小，setting放至Execute函数里面传递
 
 // 请求报文示例
@@ -315,10 +315,10 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			c2 := c | 0x20
 			if c2 == 'c' || c2 == 't' {
-				if bytes.EqualFold(field, contentLength) {
+				if bytes.EqualFold(field, bytesContentLength) {
 					// Content-Length
 					p.headerCurrState = hContentLength
-				} else if bytes.EqualFold(field, transferEncoding) {
+				} else if bytes.EqualFold(field, bytesTransferEncoding) {
 					// Transfer-Encoding
 					p.headerCurrState = hTransferEncoding
 				} else if bytes.EqualFold(field, bytesConnection) {
