@@ -217,10 +217,11 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				setting.MessageBegin(p)
 			}
 
-			p.currState, currState = rspHTTP, rspHTTP
+			currState = rspHTTP
 
 		case rspHTTP:
 			if len(buf[i:]) < len(strTTPslash) {
+				p.currState = currState
 				return i, nil
 			}
 
@@ -229,11 +230,12 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			i += len(strTTPslash) - 1
-			p.currState, currState = rspHTTPVersionNum, rspHTTPVersionNum
+			currState = rspHTTPVersionNum
 
 		case rspHTTPVersionNum:
 			// 1.1 or 1.0 or 0.9
 			if len(buf[i:]) < 3 {
+				p.currState = currState
 				return i, nil
 			}
 
@@ -244,14 +246,14 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			p.Major = buf[i] - '0'
 			p.Minor = buf[i+2] - '0'
 			i += 2 // 3-1
-			p.currState, currState = rspHTTPVersionNumAfterSP, rspHTTPVersionNumAfterSP
+			currState = rspHTTPVersionNumAfterSP
 
 		case rspHTTPVersionNumAfterSP:
 			if c == ' ' || c == '\r' || c == '\n' {
 				continue
 			}
 
-			p.currState, currState = rspStatusCode, rspStatusCode
+			currState = rspStatusCode
 			goto reExec
 		case rspStatusCode:
 
@@ -267,7 +269,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				continue
 			}
 
-			p.currState, currState = rspStatus, rspStatus
+			currState = rspStatus
 			goto reExec
 		case rspStatus:
 			if reasonPhraseIndex == 0 {
@@ -278,7 +280,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				if setting.Status != nil {
 					setting.Status(p, buf[reasonPhraseIndex:i])
 				}
-				p.currState, currState = rspStatusAfterSP, rspStatusAfterSP
+				currState = rspStatusAfterSP
 				continue
 			}
 
@@ -286,7 +288,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				if setting.Status != nil {
 					setting.Status(p, buf[reasonPhraseIndex:i])
 				}
-				p.currState, currState = headerField, headerField
+				currState = headerField
 			}
 
 		case rspStatusAfterSP:
@@ -571,7 +573,6 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 	}
 
 	p.currState = currState
-
 	return i, nil
 }
 
