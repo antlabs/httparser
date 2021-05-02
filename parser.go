@@ -33,19 +33,19 @@ var (
 
 // http 1.1 or http 1.0解析器
 type Parser struct {
-	hType               ReqOrRsp     //解析器的类型，解析请求还是响应
-	currState           state        //记录当前状态
-	headerCurrState     headerState  //记录http field状态
-	Major               uint8        //主版本号
-	Minor               uint8        //次版本号
-	MaxHeaderSize       int32        //最大头长度
-	contentLength       int32        //content-length 值
-	StatusCode          uint16       //状态码
-	hasContentLength    bool         //设置Content-Length头部
-	hasTransferEncoding bool         //transferEncoding头部
-	hasClose            bool         // Connection: close
-	hasUpgrade          bool         // Connection: Upgrade
-	trailing            trailerState //trailer的状态
+	hType               ReqOrRsp    //解析器的类型，解析请求还是响应
+	currState           state       //记录当前状态
+	headerCurrState     headerState //记录http field状态
+	Major               uint8       //主版本号
+	Minor               uint8       //次版本号
+	MaxHeaderSize       int32       //最大头长度
+	contentLength       int32       //content-length 值
+	StatusCode          uint16      //状态码
+	hasContentLength    bool        //设置Content-Length头部
+	hasTransferEncoding bool        //transferEncoding头部
+	hasClose            bool        // Connection: close
+	hasUpgrade          bool        // Connection: Upgrade
+	hasTrailing         bool        // 有trailer的包
 	userData            interface{}
 }
 
@@ -412,7 +412,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				return i, ErrNoEndLF
 			}
 
-			if p.trailing == needParserTrailer {
+			if p.hasTrailing {
 				if setting.MessageComplete != nil {
 					setting.MessageComplete(p)
 				}
@@ -518,7 +518,8 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 		case chunkedSizeAlmostDone:
 			if p.contentLength == 0 {
 
-				p.trailing = needParserTrailer
+				// 不管有没有trailing数据包, 先当它有
+				p.hasTrailing = true
 				currState = headerField
 
 				continue
@@ -596,7 +597,7 @@ func (p *Parser) Reset() {
 	p.StatusCode = 0
 	p.hasContentLength = false
 	p.hasTransferEncoding = false
-	p.trailing = defaultTrailer
+	p.hasTrailing = false
 }
 
 // debug专用
