@@ -78,7 +78,7 @@ const (
 	startReqOrRsp
 
 	// http header解析结束
-	headerDone
+	headersDone
 	// 解析http field
 	headerField
 	// 进入http header分隔符号
@@ -107,6 +107,8 @@ const (
 	chunkedDataDone
 	// 快要结束
 	messageAlmostDone
+	// 一直读到socket eof
+	bodyIdentityEof
 	// 解析结束
 	messageDone
 )
@@ -132,7 +134,7 @@ var stateTab = []string{
 	rspStatus:                "rspStatus",
 	rspStatusAfterSP:         "rspStatusCodeAfterSP",
 	startReqOrRsp:            "startReqOrRsp",
-	headerDone:               "headerDone",
+	headersDone:              "headersDone",
 	headerField:              "headerField",
 	headerValueDiscardWs:     "headerValueDiscardWs",
 	headerValue:              "headerValue",
@@ -157,5 +159,4 @@ const (
 	hContentLength
 	hTransferEncoding
 	hConnection
-	hUpgrade
 )

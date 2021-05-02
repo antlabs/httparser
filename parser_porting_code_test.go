@@ -45,7 +45,7 @@ type message struct {
 }
 
 func (m *message) eq(t *testing.T, m2 *message) bool {
-	b := assert.Equal(t, m.messageCompleteCbCalled, m2.messageCompleteCbCalled)
+	b := assert.Equal(t, m.messageCompleteCbCalled, m2.messageCompleteCbCalled, "messageCompleteCbCalled")
 	if !b {
 		return false
 	}
@@ -451,31 +451,29 @@ var requests = []message{
 }
 
 var responses = []message{
-	/*
-		{
-			name:  "HTTP 200 response with Upgrade header",
-			hType: RESPONSE,
-			raw: "HTTP/1.1 200 OK\r\n" +
-				"Connection: upgrade\r\n" +
-				"Upgrade: h2c\r\n" +
-				"\r\n" +
-				"body",
-			statusCode:              200,
-			responseStatus:          "OK",
-			shouldKeepAlive:         true,
-			messageCompleteOnEof:    false,
-			messageCompleteCbCalled: true,
-			httpMajor:               1,
-			httpMinor:               1,
-			body:                    "body",
-			//method: HTTP_GET,
-			contentLength: math.MaxUint64,
-			headers: [][2]string{
-				{"Connection", "upgrade"},
-				{"Upgrade", "h2c"},
-			},
+	{
+		name:  "HTTP 200 response with Upgrade header",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Connection: upgrade\r\n" +
+			"Upgrade: h2c\r\n" +
+			"\r\n" +
+			"body",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		body:                    "body",
+		//method: HTTP_GET,
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Connection", "upgrade"},
+			{"Upgrade", "h2c"},
 		},
-	*/
+	},
 	{
 		name:  "HTTP 200 response with Upgrade and Content-Length header",
 		hType: RESPONSE,
@@ -596,6 +594,9 @@ func test_Message(t *testing.T, m *message) {
 		}
 
 		_, err := parse(p, msg1Message+msg2Message)
+		assert.NoError(t, err)
+
+		_, err = parse(p, "")
 		assert.NoError(t, err)
 		if b := m.eq(t, got); !b {
 			t.Logf("msg1.len:%d, msg2.len:%d, test case name:%s\n", len(msg1Message), len(msg2Message), m.name)

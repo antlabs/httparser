@@ -31,22 +31,28 @@ var (
 	MaxHeaderSize         int32 = 4096 //默认http header单行最大限制为4k
 )
 
+const unused = -1
+
 // http 1.1 or http 1.0解析器
 type Parser struct {
-	hType               ReqOrRsp    //解析器的类型，解析请求还是响应
-	currState           state       //记录当前状态
-	headerCurrState     headerState //记录http field状态
-	Major               uint8       //主版本号
-	Minor               uint8       //次版本号
-	MaxHeaderSize       int32       //最大头长度
-	contentLength       int32       //content-length 值
-	StatusCode          uint16      //状态码
-	hasContentLength    bool        //设置Content-Length头部
-	hasTransferEncoding bool        //transferEncoding头部
-	hasClose            bool        // Connection: close
-	hasUpgrade          bool        // Connection: Upgrade
-	hasTrailing         bool        // 有trailer的包
-	userData            interface{}
+	hType                ReqOrRsp    //解析器的类型，解析请求还是响应
+	currState            state       //记录当前状态
+	headerCurrState      headerState //记录http field状态
+	Major                uint8       //主版本号
+	Minor                uint8       //次版本号
+	MaxHeaderSize        int32       //最大头长度
+	contentLength        int32       //content-length 值
+	StatusCode           uint16      //状态码
+	hasContentLength     bool        //设置Content-Length头部
+	hasTransferEncoding  bool        //transferEncoding头部
+	hasClose             bool        //Connection: close
+	hasUpgrade           bool        //Upgrade: xx
+	hasConnectionUpgrade bool        //Connection: Upgrade
+	hasTrailing          bool        //有trailer的包
+
+	Upgrade bool //从http升级为别的协议, 比如websocket
+
+	userData interface{}
 }
 
 // 解析器构造函数
@@ -64,6 +70,7 @@ func (p *Parser) Init(t ReqOrRsp) {
 	p.hType = t
 	p.Major = 0
 	p.Minor = 0
+	p.contentLength = unused
 	p.MaxHeaderSize = MaxHeaderSize
 
 }
@@ -123,6 +130,18 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 	i := 0
 	c := byte(0)
+
+	if len(buf) == 0 {
+		switch currState {
+		case bodyIdentityEof:
+			if setting.MessageComplete != nil {
+				setting.MessageComplete(p)
+			}
+			return 0, nil
+		default:
+			return 0, nil
+		}
+	}
 
 	for ; i < len(buf); i++ {
 		c = buf[i]
@@ -294,7 +313,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 		case headerField:
 			if c == '\r' || c == '\n' {
-				currState = headerDone
+				currState = headersDone
 				continue
 			}
 
@@ -318,6 +337,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				if bytes.EqualFold(field, bytesContentLength) {
 					// Content-Length
 					p.headerCurrState = hContentLength
+					p.contentLength = 0
 				} else if bytes.EqualFold(field, bytesTransferEncoding) {
 					// Transfer-Encoding
 					p.headerCurrState = hTransferEncoding
@@ -328,6 +348,9 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 					// general
 					p.headerCurrState = hGeneral
 				}
+			} else if bytes.EqualFold(field, bytesUpgrade) {
+				p.hasUpgrade = true
+				p.headerCurrState = hGeneral
 			} else {
 				p.headerCurrState = hGeneral
 			}
@@ -364,7 +387,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				case bytes.Index(hValue, bytesClose) != -1:
 					p.hasClose = true
 				case bytes.Index(hValue, bytesUpgrade) != -1:
-					p.hasUpgrade = true
+					p.hasConnectionUpgrade = true
 				}
 			case hContentLength:
 				n, err := strconv.Atoi(BytesToString(hValue))
@@ -407,9 +430,13 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			// 不是'\n'也许是headerField的数据
 			goto reExec
 
-		case headerDone:
+		case headersDone:
 			if c != '\n' {
 				return i, ErrNoEndLF
+			}
+
+			if p.hasUpgrade && p.hasConnectionUpgrade {
+				p.Upgrade = p.hType == REQUEST || p.StatusCode == 101
 			}
 
 			if p.hasTrailing {
@@ -458,7 +485,13 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			if p.Eof() {
 				currState = messageDone
+				if setting.MessageComplete != nil {
+					setting.MessageComplete(p)
+				}
+				continue
 			}
+			//一直读到socket eof
+			currState = bodyIdentityEof
 		case httpBody:
 			if p.hasContentLength {
 				nread := min(int32(len(buf[i:])), p.contentLength)
@@ -480,6 +513,12 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 						setting.MessageComplete(p)
 					}
 				}
+			}
+
+		case bodyIdentityEof:
+			if setting.Body != nil {
+				setting.Body(p, buf[i:len(buf)])
+				i = len(buf) - 1
 			}
 
 		case chunkedSizeStart:
@@ -593,7 +632,7 @@ func (p *Parser) Reset() {
 	p.Major = 0
 	p.Minor = 0
 	//p.MaxHeaderSize
-	p.contentLength = 0
+	p.contentLength = unused
 	p.StatusCode = 0
 	p.hasContentLength = false
 	p.hasTransferEncoding = false
