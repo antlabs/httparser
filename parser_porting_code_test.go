@@ -1,7 +1,6 @@
 package httparser
 
 import (
-	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,7 +32,7 @@ type message struct {
 
 	httpMajor     uint16
 	httpMinor     uint16
-	contentLength uint64
+	contentLength int32
 
 	messageBeginCbCalled    bool
 	headersCompleteCbCalled bool
@@ -97,7 +96,7 @@ var requests = []message{
 		httpMinor:               1,
 		//method: HTTP_GET,
 		requestUrl:    "/test",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"User-Agent", "curl/7.18.0 (i486-pc-linux-gnu) libcurl/7.18.0 OpenSSL/0.9.8g zlib/1.2.3.3 libidn/1.1"},
 			{"Host", "0.0.0.0=5000"},
@@ -125,7 +124,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_GET,
 		requestUrl:    "/favicon.ico",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Host", "0.0.0.0=5000"},
 			{"User-Agent", "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0"},
@@ -151,7 +150,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_GET,
 		requestUrl:    "/dumbluck",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"aaaaaaaaaaaaa", "++++++++++"},
 		},
@@ -169,7 +168,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_GET,
 		requestUrl:    "/forums/1/topics/2375?page=1#posts-17408",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 	},
 	{
 		name:                    "get no headers no body",
@@ -184,7 +183,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_GET,
 		requestUrl:    "/get_no_headers_no_body/world",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 	},
 	{
 		name:                    "get one header no body",
@@ -200,7 +199,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_GET,
 		requestUrl:    "/get_one_header_no_body",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Accept", "*/*"},
 		},
@@ -220,7 +219,7 @@ var requests = []message{
 		httpMinor:            0,
 		//method: HTTP_GET,
 		requestUrl:    "/get_funky_content_length_body_hello",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"conTENT-Length", "5"},
 		},
@@ -242,7 +241,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_POST,
 		requestUrl:    "/post_identity_body_world?q=search#hey",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Accept", "*/*"},
 			{"Content-Length", "5"},
@@ -266,7 +265,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_POST,
 		requestUrl:    "/post_chunked_all_your_base",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
 		},
@@ -290,7 +289,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_POST,
 		requestUrl:    "/two_chunks_mult_zero_end",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
 		},
@@ -316,7 +315,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_POST,
 		requestUrl:    "/chunked_w_trailing_headers",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
 			{"Vary", "*"},
@@ -342,7 +341,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_POST,
 		requestUrl:    "/chunked_w_nonsense_after_length",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
 		},
@@ -360,7 +359,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_POST,
 		requestUrl:    "/with_\"stupid\"_quotes?foo=\"bar\"",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 	},
 	{
 		name:                    "apachebench get",
@@ -377,7 +376,7 @@ var requests = []message{
 		httpMinor:            0,
 		//method: HTTP_POST,
 		requestUrl:    "/test",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Host", "0.0.0.0:5000"},
 			{"User-Agent", "ApacheBench/2.3"},
@@ -396,7 +395,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_POST,
 		requestUrl:    "/test.cgi?foo=bar?baz",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 	},
 	/* Some clients, especially after a POST in a keep-alive connection,
 	 * will send an extra CRLF before the next request
@@ -413,7 +412,7 @@ var requests = []message{
 		httpMinor:            1,
 		//method: HTTP_POST,
 		requestUrl:    "/test",
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 	},
 	/*
 		{
@@ -437,7 +436,7 @@ var requests = []message{
 			httpMinor:            1,
 			//method: HTTP_POST,
 			requestUrl:    "/demo",
-			contentLength: math.MaxUint64,
+			contentLength: unused,
 			headers: [][2]string{{"Host", "example.com"},
 				{"Connection", "Upgrade"},
 				{"Sec-WebSocket-Key2", "12998 5 Y3 1  .P00"},
@@ -468,7 +467,7 @@ var responses = []message{
 		httpMinor:               1,
 		body:                    "body",
 		//method: HTTP_GET,
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Connection", "upgrade"},
 			{"Upgrade", "h2c"},
@@ -492,7 +491,7 @@ var responses = []message{
 		httpMinor:               1,
 		body:                    "body",
 		//method: HTTP_GET,
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Connection", "upgrade"},
 			{"Upgrade", "h2c"},
@@ -522,7 +521,7 @@ var responses = []message{
 		httpMinor:               1,
 		body:                    "body",
 		//method: HTTP_GET,
-		contentLength: math.MaxUint64,
+		contentLength: unused,
 		headers: [][2]string{
 			{"Connection", "upgrade"},
 			{"Upgrade", "h2c"},
