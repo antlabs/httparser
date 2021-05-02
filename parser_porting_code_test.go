@@ -451,6 +451,56 @@ var requests = []message{
 }
 
 var responses = []message{
+	/*
+		{
+			name:  "HTTP 200 response with Upgrade header",
+			hType: RESPONSE,
+			raw: "HTTP/1.1 200 OK\r\n" +
+				"Connection: upgrade\r\n" +
+				"Upgrade: h2c\r\n" +
+				"\r\n" +
+				"body",
+			statusCode:              200,
+			responseStatus:          "OK",
+			shouldKeepAlive:         true,
+			messageCompleteOnEof:    false,
+			messageCompleteCbCalled: true,
+			httpMajor:               1,
+			httpMinor:               1,
+			body:                    "body",
+			//method: HTTP_GET,
+			contentLength: math.MaxUint64,
+			headers: [][2]string{
+				{"Connection", "upgrade"},
+				{"Upgrade", "h2c"},
+			},
+		},
+	*/
+	{
+		name:  "HTTP 200 response with Upgrade and Content-Length header",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Connection: upgrade\r\n" +
+			"Upgrade: h2c\r\n" +
+			"Content-Length: 4\r\n" +
+			"\r\n" +
+			"body",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		body:                    "body",
+		//method: HTTP_GET,
+		contentLength: math.MaxUint64,
+		headers: [][2]string{
+			{"Connection", "upgrade"},
+			{"Upgrade", "h2c"},
+			{"Content-Length", "4"},
+		},
+	},
 	{
 		name:  "HTTP 200 response with Upgrade and Transfer-Encoding header",
 		hType: RESPONSE,

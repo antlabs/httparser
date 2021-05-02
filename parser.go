@@ -26,9 +26,10 @@ var (
 var (
 	contentLength          = []byte("Content-Length")
 	transferEncoding       = []byte("Transfer-Encoding")
-	chunked                = []byte("chunked")
+	bytesChunked           = []byte("chunked")
 	bytesConnection        = []byte("Connection")
 	bytesClose             = []byte("close")
+	bytesUpgrade           = []byte("upgrade")
 	MaxHeaderSize    int32 = 4096 //默认http header单行最大限制为4k
 )
 
@@ -45,6 +46,7 @@ type Parser struct {
 	hasContentLength    bool         //设置Content-Length头部
 	hasTransferEncoding bool         //transferEncoding头部
 	hasClose            bool         // Connection: close
+	hasUpgrade          bool         // Connection: Upgrade
 	trailing            trailerState //trailer的状态
 	userData            interface{}
 }
@@ -361,6 +363,8 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				switch {
 				case bytes.Index(hValue, bytesClose) != -1:
 					p.hasClose = true
+				case bytes.Index(hValue, bytesUpgrade) != -1:
+					p.hasUpgrade = true
 				}
 			case hContentLength:
 				n, err := strconv.Atoi(BytesToString(hValue))
@@ -372,7 +376,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				p.hasContentLength = true
 				p.headerCurrState = hGeneral
 			case hTransferEncoding:
-				pos := bytes.Index(hValue, chunked)
+				pos := bytes.Index(hValue, bytesChunked)
 				// 没有chunked值，归类到通用http header
 				if pos == -1 {
 					p.headerCurrState = hGeneral

@@ -157,4 +157,5 @@ const (
 	hContentLength
 	hTransferEncoding
 	hConnection
+	hUpgrade
 )
