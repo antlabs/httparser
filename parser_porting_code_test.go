@@ -77,6 +77,10 @@ func (m *message) eq(t *testing.T, m2 *message) bool {
 		return false
 	}
 
+	b = assert.Equal(t, m.upgrade, m2.upgrade, "upgrade")
+	if !b {
+		return false
+	}
 	return true
 }
 
@@ -451,6 +455,38 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "HTTP 101 response with Upgrade and Transfer-Encoding header",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 101 Switching Protocols\r\n" +
+			"Connection: upgrade\r\n" +
+			"Upgrade: h2c\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"2\r\n" +
+			"bo\r\n" +
+			"2\r\n" +
+			"dy\r\n" +
+			"0\r\n" +
+			"\r\n" +
+			"proto",
+		statusCode:              101,
+		responseStatus:          "Switching Protocols",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		upgrade:                 "proto",
+		body:                    "body",
+		//method: HTTP_GET,
+		contentLength: unused,
+		headers: [][2]string{
+			{"Connection", "upgrade"},
+			{"Upgrade", "h2c"},
+			{"Transfer-Encoding", "chunked"},
+		},
+	},
+	{
 		name:  "HTTP 200 response with Upgrade header",
 		hType: RESPONSE,
 		raw: "HTTP/1.1 200 OK\r\n" +
@@ -585,15 +621,33 @@ func test_Message(t *testing.T, m *message) {
 		var (
 			n1   int
 			err1 error
+			err  error
+			n2   int
+			data string
 		)
+
 		if msg1len > 0 {
 			n1, err1 = parse(p, msg1Message)
 			assert.NoError(t, err1)
-			msg1Message = msg1Message[n1:]
+			// 如果有upgrade状态, 就不需要再重复送往数据
+			if got.messageCompleteCbCalled && p.Upgrade {
+				got.upgrade = msg1Message[n1:]
+				msg1Message = ""
+			} else {
+
+				msg1Message = msg1Message[n1:]
+			}
 		}
 
-		_, err := parse(p, msg1Message+msg2Message)
+		data = msg1Message + msg2Message
+		n2, err = parse(p, data)
+		if got.messageCompleteCbCalled && p.Upgrade {
+			got.upgrade += data[n2:]
+			goto test
+		}
 		assert.NoError(t, err)
+
+	test:
 
 		_, err = parse(p, "")
 		assert.NoError(t, err)

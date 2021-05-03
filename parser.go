@@ -587,6 +587,9 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 		case chunkedDataDone:
 			currState = chunkedSizeStart
 		case messageDone:
+			if p.Upgrade {
+				return i + 1, nil
+			}
 			// 规范的chunked包是以\r\n结尾的
 			if c == '\r' || c == '\n' {
 				continue
