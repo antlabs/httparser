@@ -474,6 +474,104 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "bonjourmadame.fr",
+		hType: RESPONSE,
+		raw: "HTTP/1.0 301 Moved Permanently\r\n" +
+			"Date: Thu, 03 Jun 2010 09:56:32 GMT\r\n" +
+			"Server: Apache/2.2.3 (Red Hat)\r\n" +
+			"Cache-Control: public\r\n" +
+			"Pragma: \r\n" +
+			"Location: http://www.bonjourmadame.fr/\r\n" +
+			"Vary: Accept-Encoding\r\n" +
+			"Content-Length: 0\r\n" +
+			"Content-Type: text/html; charset=UTF-8\r\n" +
+			"Connection: keep-alive\r\n" +
+			"\r\n",
+		statusCode:              301,
+		responseStatus:          "Moved Permanently",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               0,
+		//method: HTTP_GET,
+		contentLength: unused,
+		headers: [][2]string{
+			{"Date", "Thu, 03 Jun 2010 09:56:32 GMT"},
+			{"Server", "Apache/2.2.3 (Red Hat)"},
+			{"Cache-Control", "public"},
+			{"Pragma", ""},
+			{"Location", "http://www.bonjourmadame.fr/"},
+			{"Vary", "Accept-Encoding"},
+			{"Content-Length", "0"},
+			{"Content-Type", "text/html; charset=UTF-8"},
+			{"Connection", "keep-alive"},
+		},
+	},
+	{
+		name:  "field underscore",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Date: Tue, 28 Sep 2010 01:14:13 GMT\r\n" +
+			"Server: Apache\r\n" +
+			"Cache-Control: no-cache, must-revalidate\r\n" +
+			"Expires: Mon, 26 Jul 1997 05:00:00 GMT\r\n" +
+			".et-Cookie: PlaxoCS=1274804622353690521; path=/; domain=.plaxo.com\r\n" +
+			"Vary: Accept-Encoding\r\n" +
+			"_eep-Alive: timeout=45\r\n" + /* semantic value ignored */
+			"_onnection: Keep-Alive\r\n" + /* semantic value ignored */
+			"Transfer-Encoding: chunked\r\n" +
+			"Content-Type: text/html\r\n" +
+			"Connection: close\r\n" +
+			"\r\n" +
+			"0\r\n\r\n",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		//method: HTTP_GET,
+		contentLength: unused,
+		headers: [][2]string{
+			{"Date", "Tue, 28 Sep 2010 01:14:13 GMT"},
+			{"Server", "Apache"},
+			{"Cache-Control", "no-cache, must-revalidate"},
+			{"Expires", "Mon, 26 Jul 1997 05:00:00 GMT"},
+			{".et-Cookie", "PlaxoCS=1274804622353690521; path=/; domain=.plaxo.com"},
+			{"Vary", "Accept-Encoding"},
+			{"_eep-Alive", "timeout=45"},
+			{"_onnection", "Keep-Alive"},
+			{"Transfer-Encoding", "chunked"},
+			{"Content-Type", "text/html"},
+			{"Connection", "close"},
+		},
+	},
+	{
+		name:  "non-ASCII in status line",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 500 Oriëntatieprobleem\r\n" +
+			"Date: Fri, 5 Nov 2010 23:07:12 GMT+2\r\n" +
+			"Content-Length: 0\r\n" +
+			"Connection: close\r\n" +
+			"\r\n",
+		statusCode:              500,
+		responseStatus:          "Oriëntatieprobleem",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		//method: HTTP_GET,
+		contentLength: unused,
+		headers: [][2]string{
+			{"Date", "Fri, 5 Nov 2010 23:07:12 GMT+2"},
+			{"Content-Length", "0"},
+			{"Connection", "close"},
+		},
+	},
+	{
 		name:  "http version 0.9",
 		hType: RESPONSE,
 		raw: "HTTP/0.9 200 OK\r\n" +
