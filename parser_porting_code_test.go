@@ -77,6 +77,11 @@ func (m *message) eq(t *testing.T, m2 *message) bool {
 		return false
 	}
 
+	b = assert.Equal(t, m.responseStatus, m2.responseStatus, "responseStatus")
+	if !b {
+		return false
+	}
+
 	b = assert.Equal(t, m.upgrade, m2.upgrade, "upgrade")
 	if !b {
 		return false
@@ -454,6 +459,35 @@ var requests = []message{
 }
 
 var responses = []message{
+	/*
+		{
+			name:  "HTTP 101 response with Upgrade and Content-Length header",
+			hType: RESPONSE,
+			raw: "HTTP/1.1 101 Switching Protocols\r\n" +
+				"Connection: upgrade\r\n" +
+				"Upgrade: h2c\r\n" +
+				"Content-Length: 4\r\n" +
+				"\r\n" +
+				"body" +
+				"proto",
+			statusCode:              101,
+			responseStatus:          "Switching Protocols",
+			shouldKeepAlive:         true,
+			messageCompleteOnEof:    false,
+			messageCompleteCbCalled: true,
+			httpMajor:               1,
+			httpMinor:               1,
+			upgrade:                 "proto",
+			body:                    "body",
+			//method: HTTP_GET,
+			contentLength: unused,
+			headers: [][2]string{
+				{"Connection", "upgrade"},
+				{"Upgrade", "h2c"},
+				{"Content-Length", "4"},
+			},
+		},
+	*/
 	{
 		name:  "HTTP 101 response with Upgrade and Transfer-Encoding header",
 		hType: RESPONSE,
@@ -578,7 +612,7 @@ var settingTest Setting = Setting{
 	},
 	Status: func(p *Parser, status []byte) {
 		m := p.GetUserData().(*message)
-		m.responseStatus = string(status)
+		m.responseStatus += string(status)
 	},
 	HeaderField: func(p *Parser, headerField []byte) {
 		m := p.GetUserData().(*message)

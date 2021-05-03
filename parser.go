@@ -126,7 +126,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 	chunkDataStartIndex := 0
 	urlStartIndex := 0
-	reasonPhraseIndex := 0
+	reasonPhraseIndex := unused
 
 	i := 0
 	c := byte(0)
@@ -289,7 +289,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = rspStatus
 			goto reExec
 		case rspStatus:
-			if reasonPhraseIndex == 0 {
+			if reasonPhraseIndex == unused {
 				reasonPhraseIndex = i
 			}
 
@@ -608,8 +608,8 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 		}
 
 	case rspStatus:
-		if setting.Status != nil && len(buf[reasonPhraseIndex:i]) > 0 {
-			setting.Status(p, buf[urlStartIndex:len(buf)])
+		if setting.Status != nil && len(buf[reasonPhraseIndex:len(buf)]) > 0 {
+			setting.Status(p, buf[reasonPhraseIndex:len(buf)])
 		}
 	}
 
