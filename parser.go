@@ -1,4 +1,4 @@
-// Copyright 2020 guonaihong. All rights reserved.
+// Copyright 2021 guonaihong. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -326,9 +326,15 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = headerField
 
 		case headerField:
-			if c == '\r' || c == '\n' {
+			if c == '\r' {
 				currState = headersDone
 				continue
+			}
+
+			// 如果http包只使用'\n'作为分隔符号, 降会进入到这个if里面
+			if c == '\n' {
+				currState = headersDone
+				goto reExec
 			}
 
 			pos := bytes.IndexByte(buf[i:], ':')
@@ -494,13 +500,15 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				continue
 			}
 
-			if p.hasClose {
-				if setting.MessageComplete != nil {
-					setting.MessageComplete(p)
+			/*
+				if p.hasClose {
+					if setting.MessageComplete != nil {
+						setting.MessageComplete(p)
+					}
+					currState = messageDone
+					continue
 				}
-				currState = messageDone
-				continue
-			}
+			*/
 
 			if p.contentLength == 0 {
 				if setting.MessageComplete != nil {

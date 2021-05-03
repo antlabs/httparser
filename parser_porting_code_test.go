@@ -1,4 +1,4 @@
-// Copyright 2020 guonaihong. All rights reserved.
+// Copyright 2021 guonaihong. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -473,6 +473,56 @@ var requests = []message{
 }
 
 var responses = []message{
+	{
+		name:  "no carriage ret",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\n" +
+			"Content-Type: text/html; charset=utf-8\n" +
+			"Connection: close\n" +
+			"\n" +
+			"these headers are from http://news.ycombinator.com/",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		//method: HTTP_GET,
+		contentLength: unused,
+		body:          "these headers are from http://news.ycombinator.com/",
+		headers: [][2]string{
+			{"Content-Type", "text/html; charset=utf-8"},
+			{"Connection", "close"},
+		},
+	},
+	{
+		name:  "proxy connection",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Content-Type: text/html; charset=UTF-8\r\n" +
+			"Content-Length: 11\r\n" +
+			"Proxy-Connection: close\r\n" +
+			"Date: Thu, 31 Dec 2009 20:55:48 +0000\r\n" +
+			"\r\n" +
+			"hello world",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		//method: HTTP_GET,
+		contentLength: unused,
+		body:          "hello world",
+		headers: [][2]string{
+			{"Content-Type", "text/html; charset=UTF-8"},
+			{"Content-Length", "11"},
+			{"Proxy-Connection", "close"},
+			{"Date", "Thu, 31 Dec 2009 20:55:48 +0000"},
+		},
+	},
 	{
 		name:  "underscore header key",
 		hType: RESPONSE,
