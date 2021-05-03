@@ -474,6 +474,95 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "http version 0.9",
+		hType: RESPONSE,
+		raw: "HTTP/0.9 200 OK\r\n" +
+			"\r\n",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               0,
+		httpMinor:               9,
+		//method: HTTP_GET,
+		contentLength: unused,
+	},
+	{
+		name:  "neither content-length nor transfer-encoding response",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Content-Type: text/plain\r\n" +
+			"\r\n" +
+			"hello world",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		body:                    "hello world",
+		headers: [][2]string{
+			{"Content-Type", "text/plain"},
+		},
+		//method: HTTP_GET,
+		contentLength: unused,
+	},
+	{
+		name:  "HTTP/1.0 with keep-alive and EOF-terminated 200 status",
+		hType: RESPONSE,
+		raw: "HTTP/1.0 200 OK\r\n" +
+			"Connection: keep-alive\r\n" +
+			"\r\n",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               0,
+		headers: [][2]string{
+			{"Connection", "keep-alive"},
+		},
+		//method: HTTP_GET,
+		contentLength: unused,
+	},
+	{
+		name:  "HTTP/1.0 with keep-alive and a 204 status",
+		hType: RESPONSE,
+		raw: "HTTP/1.0 204 No content\r\n" +
+			"Connection: keep-alive\r\n" +
+			"\r\n",
+		statusCode:              200,
+		responseStatus:          "No content",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               0,
+		headers: [][2]string{
+			{"Connection", "keep-alive"},
+		},
+		//method: HTTP_GET,
+		contentLength: unused,
+	},
+	{
+		name:  "HTTP/1.1 with an EOF-terminated 200 status",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"\r\n",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		//method: HTTP_GET,
+		contentLength: unused,
+	},
+	{
 		name:  "HTTP/1.1 with a 204 status",
 		hType: RESPONSE,
 		raw: "HTTP/1.1 204 No content\r\n" +
