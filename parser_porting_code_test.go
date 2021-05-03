@@ -1,3 +1,17 @@
+// Copyright 2020 guonaihong. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package httparser
 
 import (
@@ -459,6 +473,39 @@ var requests = []message{
 }
 
 var responses = []message{
+	{
+		name:  "field space",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Server: Microsoft-IIS/6.0\r\n" +
+			"X-Powered-By: ASP.NET\r\n" +
+			"en-US Content-Type: text/xml\r\n" + /* this is the problem */
+			"Content-Type: text/xml\r\n" +
+			"Content-Length: 16\r\n" +
+			"Date: Fri, 23 Jul 2010 18:45:38 GMT\r\n" +
+			"Connection: keep-alive\r\n" +
+			"\r\n" +
+			"<xml>hello</xml>",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		body:                    "<xml>hello</xml>",
+		//method: HTTP_GET,
+		contentLength: unused,
+		headers: [][2]string{
+			{"Server", "Microsoft-IIS/6.0"},
+			{"X-Powered-By", "ASP.NET"},
+			{"en-US Content-Type", "text/xml"},
+			{"Content-Type", "text/xml"},
+			{"Content-Length", "16"},
+			{"Date", "Fri, 23 Jul 2010 18:45:38 GMT"},
+			{"Connection", "keep-alive"},
+		},
+	},
 	{
 		name:  "amazon.com",
 		hType: RESPONSE,
