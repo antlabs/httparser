@@ -96,6 +96,11 @@ func (m *message) eq(t *testing.T, m2 *message) bool {
 		return false
 	}
 
+	b = assert.Equal(t, m.statusCode, m2.statusCode, "status code")
+	if !b {
+		return false
+	}
+
 	b = assert.Equal(t, m.upgrade, m2.upgrade, "upgrade")
 	if !b {
 		return false
@@ -474,6 +479,52 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "google 301",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 301 Moved Permanently\r\n" +
+			"Location: http://www.google.com/\r\n" +
+			"Content-Type: text/html; charset=UTF-8\r\n" +
+			"Date: Sun, 26 Apr 2009 11:11:49 GMT\r\n" +
+			"Expires: Tue, 26 May 2009 11:11:49 GMT\r\n" +
+			"X-$PrototypeBI-Version: 1.6.0.3\r\n" + /* $ char in header field */
+			"Cache-Control: public, max-age=2592000\r\n" +
+			"Server: gws\r\n" +
+			"Content-Length:  219  \r\n" +
+			"\r\n" +
+			"<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n" +
+			"<TITLE>301 Moved</TITLE></HEAD><BODY>\n" +
+			"<H1>301 Moved</H1>\n" +
+			"The document has moved\n" +
+			"<A HREF=\"http://www.google.com/\">here</A>.\r\n" +
+			"</BODY></HTML>\r\n",
+
+		statusCode:              301,
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		responseStatus:          "Moved Permanently",
+		//method: HTTP_GET,
+		headers: [][2]string{
+			{"Location", "http://www.google.com/"},
+			{"Content-Type", "text/html; charset=UTF-8"},
+			{"Date", "Sun, 26 Apr 2009 11:11:49 GMT"},
+			{"Expires", "Tue, 26 May 2009 11:11:49 GMT"},
+			{"X-$PrototypeBI-Version", "1.6.0.3"},
+			{"Cache-Control", "public, max-age=2592000"},
+			{"Server", "gws"},
+			{"Content-Length", " 219  "},
+		},
+		contentLength: unused,
+		body: "<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n" +
+			"<TITLE>301 Moved</TITLE></HEAD><BODY>\n" +
+			"<H1>301 Moved</H1>\n" +
+			"The document has moved\n" +
+			"<A HREF=\"http://www.google.com/\">here</A>.\r\n" +
+			"</BODY></HTML>\r\n",
+	},
+	{
 		name:  "no content-length response",
 		hType: RESPONSE,
 		raw: "HTTP/1.1 200 OK\r\n" +
@@ -809,7 +860,7 @@ var responses = []message{
 		raw: "HTTP/1.0 204 No content\r\n" +
 			"Connection: keep-alive\r\n" +
 			"\r\n",
-		statusCode:              200,
+		statusCode:              204,
 		responseStatus:          "No content",
 		shouldKeepAlive:         true,
 		messageCompleteOnEof:    false,
@@ -1180,6 +1231,7 @@ var settingTest Setting = Setting{
 	MessageComplete: func(p *Parser) {
 		m := p.GetUserData().(*message)
 		m.messageCompleteCbCalled = true
+		m.statusCode = int(p.StatusCode)
 		m.httpMajor = uint16(p.Major)
 		m.httpMinor = uint16(p.Minor)
 
