@@ -459,35 +459,33 @@ var requests = []message{
 }
 
 var responses = []message{
-	/*
-		{
-			name:  "HTTP 101 response with Upgrade and Content-Length header",
-			hType: RESPONSE,
-			raw: "HTTP/1.1 101 Switching Protocols\r\n" +
-				"Connection: upgrade\r\n" +
-				"Upgrade: h2c\r\n" +
-				"Content-Length: 4\r\n" +
-				"\r\n" +
-				"body" +
-				"proto",
-			statusCode:              101,
-			responseStatus:          "Switching Protocols",
-			shouldKeepAlive:         true,
-			messageCompleteOnEof:    false,
-			messageCompleteCbCalled: true,
-			httpMajor:               1,
-			httpMinor:               1,
-			upgrade:                 "proto",
-			body:                    "body",
-			//method: HTTP_GET,
-			contentLength: unused,
-			headers: [][2]string{
-				{"Connection", "upgrade"},
-				{"Upgrade", "h2c"},
-				{"Content-Length", "4"},
-			},
+	{
+		name:  "HTTP 101 response with Upgrade and Content-Length header",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 101 Switching Protocols\r\n" +
+			"Connection: upgrade\r\n" +
+			"Upgrade: h2c\r\n" +
+			"Content-Length: 4\r\n" +
+			"\r\n" +
+			"body" +
+			"proto",
+		statusCode:              101,
+		responseStatus:          "Switching Protocols",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		upgrade:                 "proto",
+		body:                    "body",
+		//method: HTTP_GET,
+		contentLength: unused,
+		headers: [][2]string{
+			{"Connection", "upgrade"},
+			{"Upgrade", "h2c"},
+			{"Content-Length", "4"},
 		},
-	*/
+	},
 	{
 		name:  "HTTP 101 response with Upgrade and Transfer-Encoding header",
 		hType: RESPONSE,
