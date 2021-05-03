@@ -460,6 +460,46 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "amazon.com",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 301 MovedPermanently\r\n" +
+			"Date: Wed, 15 May 2013 17:06:33 GMT\r\n" +
+			"Server: Server\r\n" +
+			"x-amz-id-1: 0GPHKXSJQ826RK7GZEB2\r\n" +
+			"p3p: policyref=\"http://www.amazon.com/w3c/p3p.xml\",CP=\"CAO DSP LAW CUR ADM IVAo IVDo CONo OTPo OUR DELi PUBi OTRi BUS PHY ONL UNI PUR FIN COM NAV INT DEM CNT STA HEA PRE LOC GOV OTC \"\r\n" +
+			"x-amz-id-2: STN69VZxIFSz9YJLbz1GDbxpbjG6Qjmmq5E3DxRhOUw+Et0p4hr7c/Q8qNcx4oAD\r\n" +
+			"Location: http://www.amazon.com/Dan-Brown/e/B000AP9DSU/ref=s9_pop_gw_al1?_encoding=UTF8&refinementId=618073011&pf_rd_m=ATVPDKIKX0DER&pf_rd_s=center-2&pf_rd_r=0SHYY5BZXN3KR20BNFAY&pf_rd_t=101&pf_rd_p=1263340922&pf_rd_i=507846\r\n" +
+			"Vary: Accept-Encoding,User-Agent\r\n" +
+			"Content-Type: text/html; charset=ISO-8859-1\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"1\r\n" +
+			"\n\r\n" +
+			"0\r\n" +
+			"\r\n",
+		statusCode:              301,
+		responseStatus:          "MovedPermanently",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		body:                    "\n",
+		//method: HTTP_GET,
+		contentLength: unused,
+		headers: [][2]string{
+			{"Date", "Wed, 15 May 2013 17:06:33 GMT"},
+			{"Server", "Server"},
+			{"x-amz-id-1", "0GPHKXSJQ826RK7GZEB2"},
+			{"p3p", "policyref=\"http://www.amazon.com/w3c/p3p.xml\",CP=\"CAO DSP LAW CUR ADM IVAo IVDo CONo OTPo OUR DELi PUBi OTRi BUS PHY ONL UNI PUR FIN COM NAV INT DEM CNT STA HEA PRE LOC GOV OTC \""},
+			{"x-amz-id-2", "STN69VZxIFSz9YJLbz1GDbxpbjG6Qjmmq5E3DxRhOUw+Et0p4hr7c/Q8qNcx4oAD"},
+			{"Location", "http://www.amazon.com/Dan-Brown/e/B000AP9DSU/ref=s9_pop_gw_al1?_encoding=UTF8&refinementId=618073011&pf_rd_m=ATVPDKIKX0DER&pf_rd_s=center-2&pf_rd_r=0SHYY5BZXN3KR20BNFAY&pf_rd_t=101&pf_rd_p=1263340922&pf_rd_i=507846"},
+			{"Vary", "Accept-Encoding,User-Agent"},
+			{"Content-Type", "text/html; charset=ISO-8859-1"},
+			{"Transfer-Encoding", "chunked"},
+		},
+	},
+	{
 		name:  "empty reason phrase after space",
 		hType: RESPONSE,
 		raw: "HTTP/1.1 200 \r\n" +
