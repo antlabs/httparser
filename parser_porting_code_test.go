@@ -460,6 +460,32 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "Content-Length-X",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Content-Length-X: 0\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"2\r\n" +
+			"OK\r\n" +
+			"0\r\n" +
+			"\r\n",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		body:                    "OK",
+		//method: HTTP_GET,
+		contentLength: unused,
+		headers: [][2]string{
+			{"Content-Length-X", "0"},
+			{"Transfer-Encoding", "chunked"},
+		},
+	},
+	{
 		name:  "HTTP 101 response with Upgrade header",
 		hType: RESPONSE,
 		raw: "HTTP/1.1 101 Switching Protocols\r\n" +
