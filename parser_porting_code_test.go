@@ -474,6 +474,21 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "HTTP/1.1 with a 204 status",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 204 No content\r\n" +
+			"\r\n",
+		statusCode:              204,
+		responseStatus:          "No content",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		//method: HTTP_GET,
+		contentLength: unused,
+	},
+	{
 		name:  "HTTP/1.1 with a 204 status and keep-alive disabled",
 		hType: RESPONSE,
 		raw: "HTTP/1.1 204 No content\r\n" +
@@ -865,14 +880,12 @@ func test_Message(t *testing.T, m *message) {
 }
 
 func Test_Message(t *testing.T) {
-	/*
-		for _, req := range requests {
-			test_Message(t, &req)
-			_ = req
-		}
-	*/
+	for _, req := range requests {
+		test_Message(t, &req)
+		_ = req
+	}
 
-	for _, rsp := range responses[:1] {
+	for _, rsp := range responses {
 		test_Message(t, &rsp)
 		_ = rsp
 	}
