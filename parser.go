@@ -331,7 +331,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				continue
 			}
 
-			// 如果http包只使用'\n'作为分隔符号, 降会进入到这个if里面
+			// 如果http包只使用'\n'作为分隔符号, 将会进入到这个if里面
 			if c == '\n' {
 				currState = headersDone
 				goto reExec
@@ -573,7 +573,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			l := unhex[c]
 			if l == -1 {
-				if c == ';' {
+				if c == ';' || c == ' ' {
 					currState = chunkedExt
 					continue
 				}

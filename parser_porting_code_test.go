@@ -474,6 +474,37 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "200 trailing space on chunked body",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Content-Type: text/plain\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"25  \r\n" +
+			"This is the data in the first chunk\r\n" +
+			"\r\n" +
+			"1C\r\n" +
+			"and this is the second one\r\n" +
+			"\r\n" +
+			"0  \r\n" +
+			"\r\n",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		//method: HTTP_GET,
+		contentLength: unused,
+		body: "This is the data in the first chunk\r\n" +
+			"and this is the second one\r\n",
+		headers: [][2]string{
+			{"Content-Type", "text/plain"},
+			{"Transfer-Encoding", "chunked"},
+		},
+	},
+	{
 		name:  "no carriage ret",
 		hType: RESPONSE,
 		raw: "HTTP/1.1 200 OK\n" +
