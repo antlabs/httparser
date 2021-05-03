@@ -460,6 +460,29 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "HTTP 101 response with Upgrade header",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 101 Switching Protocols\r\n" +
+			"Connection: upgrade\r\n" +
+			"Upgrade: h2c\r\n" +
+			"\r\n" +
+			"proto",
+		statusCode:              101,
+		responseStatus:          "Switching Protocols",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		upgrade:                 "proto",
+		//method: HTTP_GET,
+		contentLength: unused,
+		headers: [][2]string{
+			{"Connection", "upgrade"},
+			{"Upgrade", "h2c"},
+		},
+	},
+	{
 		name:  "HTTP 101 response with Upgrade and Content-Length header",
 		hType: RESPONSE,
 		raw: "HTTP/1.1 101 Switching Protocols\r\n" +
@@ -687,6 +710,7 @@ func test_Message(t *testing.T, m *message) {
 			t.Logf("msg1.len:%d, msg2.len:%d, test case name:%s\n", len(msg1Message), len(msg2Message), m.name)
 			t.Logf("msg1len:%d, msg1(%s)", msg1len, msg1Message)
 			t.Logf("msg2(%s)", msg2Message)
+			t.Logf("upgrade:%t, got.messageCompleteCbCalled:%t, data:(%s)", p.Upgrade, got.messageCompleteCbCalled, data[n2:])
 			break
 		}
 

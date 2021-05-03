@@ -149,6 +149,7 @@ var stateTab = []string{
 	chunkedDataAlmostDone:    "chunkedDataAlmostDone",
 	chunkedDataDone:          "chunkedDataDone",
 	messageAlmostDone:        "messageAlmostDone",
+	bodyIdentityEof:          "bodyIdentityEof",
 	messageDone:              "messageDone",
 }
 

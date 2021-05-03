@@ -439,6 +439,16 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				p.Upgrade = p.hType == REQUEST || p.StatusCode == 101
 			}
 
+			hasBody := p.hasTransferEncoding || p.hasContentLength && p.contentLength != unused
+
+			if p.Upgrade && (!hasBody) {
+				if setting.MessageComplete != nil {
+					setting.MessageComplete(p)
+				}
+
+				return i + 1, nil
+			}
+
 			if p.hasTrailing {
 				if setting.MessageComplete != nil {
 					setting.MessageComplete(p)
