@@ -460,6 +460,21 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "empty reason phrase after space",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 \r\n" +
+			"\r\n",
+		statusCode:              200,
+		responseStatus:          "",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		//method: HTTP_GET,
+		contentLength: unused,
+	},
+	{
 		name:  "Content-Length-X",
 		hType: RESPONSE,
 		raw: "HTTP/1.1 200 OK\r\n" +

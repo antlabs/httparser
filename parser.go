@@ -282,7 +282,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = rspStatusCodeAfterSP
 			goto reExec
 		case rspStatusCodeAfterSP:
-			if c == ' ' || c == '\r' || c == '\n' {
+			if c == ' ' {
 				continue
 			}
 
