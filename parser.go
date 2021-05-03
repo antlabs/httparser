@@ -379,7 +379,8 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			currState = headerValueDiscardWs
 		case headerValueDiscardWs:
 			// 只跳过一个' ' or '\t'
-			currState = headerValue
+			// 下个状态可能会跳出, 所以这里先把状态刷到parser里面
+			p.currState, currState = headerValue, headerValue
 			if c == ' ' || c == '\t' {
 				continue
 			}
@@ -392,7 +393,6 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				if int32(len(buf[i:])) > p.MaxHeaderSize {
 					return 0, ErrHeaderOverflow
 				}
-				p.currState = headerValueDiscardWs
 				return i, nil
 			}
 
@@ -410,7 +410,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 					p.hasConnectionUpgrade = true
 				}
 			case hContentLength:
-				n, err := strconv.Atoi(BytesToString(hValue))
+				n, err := strconv.Atoi(BytesToString(bytes.TrimSpace(hValue)))
 				if err != nil {
 					return i, err
 				}
@@ -447,7 +447,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				continue
 			}
 
-			// 不是'\n'也许是headerField的数据
+			// 不是'\n'就是headerField的数据
 			goto reExec
 
 		case headersDone:
@@ -497,24 +497,6 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			if p.hasTransferEncoding {
 				currState = chunkedSizeStart
-				continue
-			}
-
-			/*
-				if p.hasClose {
-					if setting.MessageComplete != nil {
-						setting.MessageComplete(p)
-					}
-					currState = messageDone
-					continue
-				}
-			*/
-
-			if p.contentLength == 0 {
-				if setting.MessageComplete != nil {
-					currState = newState(p.hType)
-					setting.MessageComplete(p)
-				}
 				continue
 			}
 

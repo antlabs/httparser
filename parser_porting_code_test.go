@@ -474,6 +474,78 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "no content-length response",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Date: Tue, 04 Aug 2009 07:59:32 GMT\r\n" +
+			"Server: Apache\r\n" +
+			"X-Powered-By: Servlet/2.5 JSP/2.1\r\n" +
+			"Content-Type: text/xml; charset=utf-8\r\n" +
+			"Connection: close\r\n" +
+			"\r\n" +
+			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+			"<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+			"  <SOAP-ENV:Body>\n" +
+			"    <SOAP-ENV:Fault>\n" +
+			"       <faultcode>SOAP-ENV:Client</faultcode>\n" +
+			"       <faultstring>Client Error</faultstring>\n" +
+			"    </SOAP-ENV:Fault>\n" +
+			"  </SOAP-ENV:Body>\n" +
+			"</SOAP-ENV:Envelope>",
+		statusCode:              200,
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		responseStatus:          "OK",
+		//method: HTTP_GET,
+		headers: [][2]string{
+			{"Date", "Tue, 04 Aug 2009 07:59:32 GMT"},
+			{"Server", "Apache"},
+			{"X-Powered-By", "Servlet/2.5 JSP/2.1"},
+			{"Content-Type", "text/xml; charset=utf-8"},
+			{"Connection", "close"},
+		},
+		contentLength: unused,
+		body: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+			"<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+			"  <SOAP-ENV:Body>\n" +
+			"    <SOAP-ENV:Fault>\n" +
+			"       <faultcode>SOAP-ENV:Client</faultcode>\n" +
+			"       <faultstring>Client Error</faultstring>\n" +
+			"    </SOAP-ENV:Fault>\n" +
+			"  </SOAP-ENV:Body>\n" +
+			"</SOAP-ENV:Envelope>",
+	},
+	{
+		name:                    "404 no headers no body",
+		hType:                   RESPONSE,
+		raw:                     "HTTP/1.1 404 Not Found\r\n\r\n",
+		statusCode:              404,
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		responseStatus:          "Not Found",
+		//method: HTTP_GET,
+		contentLength: unused,
+	},
+	{
+		name:                    "301 no response phrase",
+		hType:                   RESPONSE,
+		raw:                     "HTTP/1.1 301\r\n\r\n",
+		statusCode:              301,
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		//method: HTTP_GET,
+		contentLength: unused,
+	},
+	{
 		name:  "200 trailing space on chunked body",
 		hType: RESPONSE,
 		raw: "HTTP/1.1 200 OK\r\n" +
@@ -1162,8 +1234,8 @@ func test_Message(t *testing.T, m *message) {
 		assert.NoError(t, err)
 		if b := m.eq(t, got); !b {
 			t.Logf("msg1.len:%d, msg2.len:%d, test case name:%s\n", len(msg1Message), len(msg2Message), m.name)
-			t.Logf("msg1len:%d, msg1(%s)", msg1len, msg1Message)
-			t.Logf("msg2(%s)", msg2Message)
+			t.Logf("msg1len:%d,  msg1(%s)", msg1len, msg1Message)
+			t.Logf("          ,  msg2(%s)", msg2Message)
 			t.Logf("upgrade:%t, got.messageCompleteCbCalled:%t, data:(%s)", p.Upgrade, got.messageCompleteCbCalled, data[n2:])
 			break
 		}
