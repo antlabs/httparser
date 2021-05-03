@@ -495,6 +495,9 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			if p.hasClose {
+				if setting.MessageComplete != nil {
+					setting.MessageComplete(p)
+				}
 				currState = messageDone
 				continue
 			}
