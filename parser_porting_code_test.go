@@ -474,6 +474,30 @@ var requests = []message{
 
 var responses = []message{
 	{
+		name:  "underscore header key",
+		hType: RESPONSE,
+		raw: "HTTP/1.1 200 OK\r\n" +
+			"Server: DCLK-AdSvr\r\n" +
+			"Content-Type: text/xml\r\n" +
+			"Content-Length: 0\r\n" +
+			"DCLK_imp: v7;x;114750856;0-0;0;17820020;0/0;21603567/21621457/1;;~okv=;dcmt=text/xml;;~cs=o\r\n\r\n",
+		statusCode:              200,
+		responseStatus:          "OK",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		//method: HTTP_GET,
+		contentLength: unused,
+		headers: [][2]string{
+			{"Server", "DCLK-AdSvr"},
+			{"Content-Type", "text/xml"},
+			{"Content-Length", "0"},
+			{"DCLK_imp", "v7;x;114750856;0-0;0;17820020;0/0;21603567/21621457/1;;~okv=;dcmt=text/xml;;~cs=o"},
+		},
+	},
+	{
 		name:  "bonjourmadame.fr",
 		hType: RESPONSE,
 		raw: "HTTP/1.0 301 Moved Permanently\r\n" +
