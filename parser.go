@@ -59,7 +59,7 @@ type Parser struct {
 	StatusCode           uint16      //状态码
 	hasContentLength     bool        //设置Content-Length头部
 	hasTransferEncoding  bool        //transferEncoding头部
-	hasClose             bool        //Connection: close
+	hasConnectionClose   bool        //Connection: close
 	hasUpgrade           bool        //Upgrade: xx
 	hasConnectionUpgrade bool        //Connection: Upgrade
 	hasTrailing          bool        //有trailer的包
@@ -87,6 +87,12 @@ func (p *Parser) Init(t ReqOrRsp) {
 	p.contentLength = unused
 	p.MaxHeaderSize = MaxHeaderSize
 
+}
+
+func (p *Parser) complete(s *Setting) {
+	if s.MessageComplete != nil {
+		s.MessageComplete(p)
+	}
 }
 
 // 一般情况，可以使用Setting里面函数闭包特性捕获调用者私有变量
@@ -148,9 +154,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 	if len(buf) == 0 {
 		switch currState {
 		case bodyIdentityEof:
-			if setting.MessageComplete != nil {
-				setting.MessageComplete(p)
-			}
+			p.complete(setting)
 			return 0, nil
 		default:
 			return 0, nil
@@ -405,7 +409,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			case hConnection:
 				switch {
 				case bytes.Index(hValue, bytesClose) != -1:
-					p.hasClose = true
+					p.hasConnectionClose = true
 				case bytes.Index(hValue, bytesUpgrade) != -1:
 					p.hasConnectionUpgrade = true
 				}
@@ -462,17 +466,13 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			hasBody := p.hasTransferEncoding || p.hasContentLength && p.contentLength != unused
 
 			if p.Upgrade && (!hasBody) {
-				if setting.MessageComplete != nil {
-					setting.MessageComplete(p)
-				}
+				p.complete(setting)
 
 				return i + 1, nil
 			}
 
 			if p.hasTrailing {
-				if setting.MessageComplete != nil {
-					setting.MessageComplete(p)
-				}
+				p.complete(setting)
 
 				currState = messageDone
 				goto reExec
@@ -486,10 +486,8 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			if p.hasContentLength {
 				// 如果contentLength 等于0，说明body的内容为空，可以直接退出
 				if p.contentLength == 0 {
-					if setting.MessageComplete != nil {
-						setting.MessageComplete(p)
-						return i, nil
-					}
+					p.complete(setting)
+					return i, nil
 				}
 				currState = httpBody
 				continue
@@ -502,9 +500,8 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			if p.Eof() {
 				currState = messageDone
-				if setting.MessageComplete != nil {
-					setting.MessageComplete(p)
-				}
+
+				p.complete(setting)
 				continue
 			}
 			//一直读到socket eof
@@ -526,9 +523,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 				// httpBody没有后继结点,所以这里发现数据消费完, 调用下MessageComplete方法
 				if p.contentLength == 0 {
-					if setting.MessageComplete != nil {
-						setting.MessageComplete(p)
-					}
+					p.complete(setting)
 				}
 			}
 
