@@ -63,6 +63,7 @@ type Parser struct {
 	hasUpgrade           bool        //Upgrade: xx
 	hasConnectionUpgrade bool        //Connection: Upgrade
 	hasTrailing          bool        //有trailer的包
+	callMessageComplete  bool        //记录MessageComplete是否被调用
 
 	Upgrade bool //从http升级为别的协议, 比如websocket
 
@@ -89,7 +90,13 @@ func (p *Parser) Init(t ReqOrRsp) {
 
 }
 
+// 如果ReadyUpgradeData为true 说明已经有Upgrade Data数据, 并且http数据已经成功解析完成
+func (p *Parser) ReadyUpgradeData() bool {
+	return p.callMessageComplete && p.Upgrade
+}
+
 func (p *Parser) complete(s *Setting) {
+	p.callMessageComplete = true
 	if s.MessageComplete != nil {
 		s.MessageComplete(p)
 	}
@@ -651,7 +658,12 @@ func (p *Parser) Reset() {
 	p.StatusCode = 0
 	p.hasContentLength = false
 	p.hasTransferEncoding = false
+	p.hasConnectionClose = false
+	p.hasUpgrade = false
+	p.hasConnectionUpgrade = false
 	p.hasTrailing = false
+	p.callMessageComplete = false
+	p.Upgrade = false
 }
 
 // debug专用

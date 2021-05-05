@@ -1263,7 +1263,8 @@ func test_Message(t *testing.T, m *message) {
 			n1, err1 = parse(p, msg1Message)
 			assert.NoError(t, err1)
 			// 如果有upgrade状态, 就不需要再重复送往数据
-			if got.messageCompleteCbCalled && p.Upgrade {
+			if p.ReadyUpgradeData() {
+				//if p.callMessageComplete && p.Upgrade {
 				got.upgrade = msg1Message[n1:]
 				msg1Message = ""
 			} else {
