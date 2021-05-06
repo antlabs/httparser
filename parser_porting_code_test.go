@@ -442,36 +442,61 @@ var requests = []message{
 		requestUrl:    "/test",
 		contentLength: unused,
 	},
+	{
+		name:                    "upgrade request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "GET /demo HTTP/1.1\r\n" +
+			"Host: example.com\r\n" +
+			"Connection: Upgrade\r\n" +
+			"Sec-WebSocket-Key2: 12998 5 Y3 1  .P00\r\n" +
+			"Sec-WebSocket-Protocol: sample\r\n" +
+			"Upgrade: WebSocket\r\n" +
+			"Sec-WebSocket-Key1: 4 @1  46546xW%0l 1 5\r\n" +
+			"Origin: http://example.com\r\n" +
+			"\r\n" +
+			"Hot diggity dogg",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		upgrade:              "Hot diggity dogg",
+		//method: HTTP_POST,
+		requestUrl:    "/demo",
+		contentLength: unused,
+		headers: [][2]string{{"Host", "example.com"},
+			{"Connection", "Upgrade"},
+			{"Sec-WebSocket-Key2", "12998 5 Y3 1  .P00"},
+			{"Sec-WebSocket-Protocol", "sample"},
+			{"Upgrade", "WebSocket"},
+			{"Sec-WebSocket-Key1", "4 @1  46546xW%0l 1 5"},
+			{"Origin", "http://example.com"},
+		},
+	},
 	/*
 		{
-			name:                    "upgrade request",
+			name:                    "connect request",
 			hType:                   REQUEST,
 			messageCompleteCbCalled: true,
-			raw: "GET /demo HTTP/1.1\r\n" +
-				"Host: example.com\r\n" +
-				"Connection: Upgrade\r\n" +
-				"Sec-WebSocket-Key2: 12998 5 Y3 1  .P00\r\n" +
-				"Sec-WebSocket-Protocol: sample\r\n" +
-				"Upgrade: WebSocket\r\n" +
-				"Sec-WebSocket-Key1: 4 @1  46546xW%0l 1 5\r\n" +
-				"Origin: http://example.com\r\n" +
+			raw: "CONNECT 0-home0.netscape.com:443 HTTP/1.0\r\n" +
+				"User-agent: Mozilla/1.1N\r\n" +
+				"Proxy-authorization: basic aGVsbG86d29ybGQ=\r\n" +
 				"\r\n" +
-				"Hot diggity dogg",
+				"some data\r\n" +
+				"and yet even more data",
 
 			shouldKeepAlive:      true,
 			messageCompleteOnEof: false,
 			httpMajor:            1,
-			httpMinor:            1,
+			httpMinor:            0,
+			upgrade:              "some data\r\nand yet even more data",
 			//method: HTTP_POST,
-			requestUrl:    "/demo",
+			requestUrl:    "0-home0.netscape.com:443",
 			contentLength: unused,
-			headers: [][2]string{{"Host", "example.com"},
-				{"Connection", "Upgrade"},
-				{"Sec-WebSocket-Key2", "12998 5 Y3 1  .P00"},
-				{"Sec-WebSocket-Protocol", "sample"},
-				{"Upgrade", "WebSocket"},
-				{"Sec-WebSocket-Key1", "4 @1  46546xW%0l 1 5"},
-				{"Origin", "http://example.com"},
+			headers: [][2]string{
+				{"User-agent", "Mozilla/1.1N"},
+				{"Proxy-authorization", "basic aGVsbG86d29ybGQ="},
 			},
 		},
 	*/

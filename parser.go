@@ -417,7 +417,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				switch {
 				case bytes.Index(hValue, bytesClose) != -1:
 					p.hasConnectionClose = true
-				case bytes.Index(hValue, bytesUpgrade) != -1:
+				case bytes.EqualFold(hValue, bytesUpgrade) == true:
 					p.hasConnectionUpgrade = true
 				}
 			case hContentLength:
