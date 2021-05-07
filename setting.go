@@ -51,10 +51,10 @@ func (s state) String() string {
 }
 
 const (
+	// 错误的状态
+	dead state = iota + 1
 	// request状态
-	startReq state = iota + 1
-	// reqMethod状态
-	reqMethod
+	startReq
 	// reqMethod 后面的SP
 	reqMethodAfterSP
 	// 请求URL
@@ -130,7 +130,6 @@ const (
 // debug使用
 var stateTab = []string{
 	startReq:                 "startReq",
-	reqMethod:                "reqMethod",
 	reqMethodAfterSP:         "reqMethodAfterSP",
 	reqURL:                   "reqURL",
 	reqURLAfterSP:            "reqURLAfterSP",

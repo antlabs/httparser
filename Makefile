@@ -8,6 +8,10 @@ gen_unhex:
 gen_tokens:
 	go run _cmd/gen_token.go >tokens.go
 
+gen_method:
+	go run _cmd/gen_method.go
+
+
 example.run: example
 	- ./request
 	- ./response

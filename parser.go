@@ -17,11 +17,15 @@ package httparser
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 	"unicode"
+	"unsafe"
 )
 
 var (
+	ErrMethod          = errors.New("http method fail")
 	ErrHTTPVersion     = errors.New("http version")
 	ErrHTTPVersionNum  = errors.New("http version number")
 	ErrHeaderOverflow  = errors.New("http header overflow")
@@ -42,6 +46,7 @@ var (
 	bytesConnection             = []byte("Connection")
 	bytesClose                  = []byte("close")
 	bytesUpgrade                = []byte("upgrade")
+	bytesSpace                  = []byte(" ")
 	MaxHeaderSize         int32 = 4096 //默认http header单行最大限制为4k
 )
 
@@ -50,6 +55,7 @@ const unused = -1
 // http 1.1 or http 1.0解析器
 type Parser struct {
 	hType                ReqOrRsp    //解析器的类型，解析请求还是响应
+	Method               Method      //记录request的method
 	currState            state       //记录当前状态
 	headerCurrState      headerState //记录http field状态
 	Major                uint8       //主版本号
@@ -171,10 +177,14 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 	for ; i < len(buf); i++ {
 		c = buf[i]
 
-		//fmt.Printf("---->debug state(%s):(%s)\n", currState, buf[i:])
+		//fmt.Printf("---->debug state(%s):(%s)method(%#v)\n", currState, buf[i:], p.Method)
 	reExec:
 		switch currState {
 		case startReqOrRsp:
+			if c == '\r' || c == '\n' {
+				continue
+			}
+
 			if c == 'H' {
 				if setting.MessageBegin != nil {
 					setting.MessageBegin(p)
@@ -189,24 +199,92 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				continue
 			}
 
-			if token[c] == 0 {
-				return 0, ErrReqMethod
+			pos := bytes.Index(buf[i:], bytesSpace)
+			if pos == -1 {
+				p.currState = startReq
+				return i, nil
 			}
 
-			currState = reqMethod
 			if setting.MessageBegin != nil {
 				setting.MessageBegin(p)
 			}
 
-		case reqMethod:
-			if token[c] == 0 {
-				if c == ' ' || c == '\t' {
-					currState = reqMethodAfterSP
-					continue
-				}
-
-				return i, ErrReqMethod
+			buf2 := buf[i : i+pos]
+			switch {
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "GET"):
+				p.Method = GET
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "HEAD"):
+				p.Method = HEAD
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "POST"):
+				p.Method = POST
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "PUT"):
+				p.Method = PUT
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "DELETE"):
+				p.Method = DELETE
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "CONNECT"):
+				p.Method = CONNECT
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "OPTIONS"):
+				p.Method = OPTIONS
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "TRACE"):
+				p.Method = TRACE
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "ACL"):
+				p.Method = ACL
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "BIND"):
+				p.Method = BIND
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "COPY"):
+				p.Method = COPY
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "CHECKOUT"):
+				p.Method = CHECKOUT
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "LOCK"):
+				p.Method = LOCK
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "UNLOCK"):
+				p.Method = UNLOCK
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "LINK"):
+				p.Method = LINK
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "MKCOL"):
+				p.Method = MKCOL
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "MOVE"):
+				p.Method = MOVE
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "MKACTIVITY"):
+				p.Method = MKACTIVITY
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "MERGE"):
+				p.Method = MERGE
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "M-SEARCH"):
+				p.Method = M_SEARCH
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "MKCALENDAR"):
+				p.Method = MKCALENDAR
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "NOTIFY"):
+				p.Method = NOTIFY
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "PROPFIND"):
+				p.Method = PROPFIND
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "PROPPATCH"):
+				p.Method = PROPPATCH
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "PATCH"):
+				p.Method = PATCH
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "PURGE"):
+				p.Method = PURGE
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "REPORT"):
+				p.Method = REPORT
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "REBIND"):
+				p.Method = REBIND
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "SUBSCRIBE"):
+				p.Method = SUBSCRIBE
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "SEARCH"):
+				p.Method = SEARCH
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "SOURCE"):
+				p.Method = SOURCE
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "UNSUBSCRIBE"):
+				p.Method = UNSUBSCRIBE
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "UNBIND"):
+				p.Method = UNBIND
+			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "UNLINK"):
+				p.Method = UNLINK
+			default:
+				return 0, fmt.Errorf("%w:%s", ErrMethod, buf2)
 			}
+
+			i += pos
+			currState = reqMethodAfterSP
 
 			// 维持reqMethod状态不变
 		case reqMethodAfterSP:
@@ -468,13 +546,17 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			if p.hasUpgrade && p.hasConnectionUpgrade {
 				p.Upgrade = p.hType == REQUEST || p.StatusCode == 101
+			} else {
+				//ReadyUpgradeData 函数需要使用
+				p.Upgrade = p.Method == CONNECT
 			}
 
 			hasBody := p.hasTransferEncoding || p.hasContentLength && p.contentLength != unused
 
-			if p.Upgrade && (!hasBody) {
+			if p.Upgrade && !hasBody || p.Method == CONNECT {
 				p.complete(setting)
 
+				p.currState = p.newMessage()
 				return i + 1, nil
 			}
 
@@ -616,6 +698,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			currState = newState(p.hType)
 			p.Reset()
+			goto reExec
 		}
 
 	}
@@ -677,6 +760,29 @@ func (p *Parser) Eof() bool {
 	}
 
 	return p.currState == messageDone
+}
+
+func (p *Parser) shouldKeepAlive() bool {
+	if p.Major > 0 && p.Minor > 0 {
+		if p.hasConnectionClose {
+			return false
+		}
+	} else {
+		//TODO
+	}
+
+	return p.Eof()
+}
+
+func (p *Parser) newMessage() state {
+	if p.shouldKeepAlive() {
+		if p.hType == REQUEST {
+			return startReq
+		}
+		return startRsp
+	}
+
+	return dead
 }
 
 func min(a, b int32) int32 {

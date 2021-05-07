@@ -21,10 +21,10 @@ import (
 )
 
 type message struct {
-	name  string
-	hType ReqOrRsp
-	raw   string
-	//httpMethod      method
+	name           string
+	hType          ReqOrRsp
+	method         Method
+	raw            string
 	statusCode     int
 	responseStatus string
 	requestPath    string
@@ -122,9 +122,9 @@ var requests = []message{
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
-		//method: HTTP_GET,
-		requestUrl:    "/test",
-		contentLength: unused,
+		method:                  GET,
+		requestUrl:              "/test",
+		contentLength:           unused,
 		headers: [][2]string{
 			{"User-Agent", "curl/7.18.0 (i486-pc-linux-gnu) libcurl/7.18.0 OpenSSL/0.9.8g zlib/1.2.3.3 libidn/1.1"},
 			{"Host", "0.0.0.0=5000"},
@@ -150,9 +150,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_GET,
-		requestUrl:    "/favicon.ico",
-		contentLength: unused,
+		method:               GET,
+		requestUrl:           "/favicon.ico",
+		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "0.0.0.0=5000"},
 			{"User-Agent", "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0"},
@@ -176,9 +176,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_GET,
-		requestUrl:    "/dumbluck",
-		contentLength: unused,
+		method:               GET,
+		requestUrl:           "/dumbluck",
+		contentLength:        unused,
 		headers: [][2]string{
 			{"aaaaaaaaaaaaa", "++++++++++"},
 		},
@@ -194,9 +194,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_GET,
-		requestUrl:    "/forums/1/topics/2375?page=1#posts-17408",
-		contentLength: unused,
+		method:               GET,
+		requestUrl:           "/forums/1/topics/2375?page=1#posts-17408",
+		contentLength:        unused,
 	},
 	{
 		name:                    "get no headers no body",
@@ -209,9 +209,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_GET,
-		requestUrl:    "/get_no_headers_no_body/world",
-		contentLength: unused,
+		method:               GET,
+		requestUrl:           "/get_no_headers_no_body/world",
+		contentLength:        unused,
 	},
 	{
 		name:                    "get one header no body",
@@ -225,9 +225,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_GET,
-		requestUrl:    "/get_one_header_no_body",
-		contentLength: unused,
+		method:               GET,
+		requestUrl:           "/get_one_header_no_body",
+		contentLength:        unused,
 		headers: [][2]string{
 			{"Accept", "*/*"},
 		},
@@ -245,9 +245,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            0,
-		//method: HTTP_GET,
-		requestUrl:    "/get_funky_content_length_body_hello",
-		contentLength: unused,
+		method:               GET,
+		requestUrl:           "/get_funky_content_length_body_hello",
+		contentLength:        unused,
 		headers: [][2]string{
 			{"conTENT-Length", "5"},
 		},
@@ -267,9 +267,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_POST,
-		requestUrl:    "/post_identity_body_world?q=search#hey",
-		contentLength: unused,
+		method:               POST,
+		requestUrl:           "/post_identity_body_world?q=search#hey",
+		contentLength:        unused,
 		headers: [][2]string{
 			{"Accept", "*/*"},
 			{"Content-Length", "5"},
@@ -291,9 +291,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_POST,
-		requestUrl:    "/post_chunked_all_your_base",
-		contentLength: unused,
+		method:               POST,
+		requestUrl:           "/post_chunked_all_your_base",
+		contentLength:        unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
 		},
@@ -315,9 +315,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_POST,
-		requestUrl:    "/two_chunks_mult_zero_end",
-		contentLength: unused,
+		method:               POST,
+		requestUrl:           "/two_chunks_mult_zero_end",
+		contentLength:        unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
 		},
@@ -341,9 +341,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_POST,
-		requestUrl:    "/chunked_w_trailing_headers",
-		contentLength: unused,
+		method:               POST,
+		requestUrl:           "/chunked_w_trailing_headers",
+		contentLength:        unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
 			{"Vary", "*"},
@@ -367,9 +367,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_POST,
-		requestUrl:    "/chunked_w_nonsense_after_length",
-		contentLength: unused,
+		method:               POST,
+		requestUrl:           "/chunked_w_nonsense_after_length",
+		contentLength:        unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
 		},
@@ -385,9 +385,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_POST,
-		requestUrl:    "/with_\"stupid\"_quotes?foo=\"bar\"",
-		contentLength: unused,
+		method:               POST,
+		requestUrl:           "/with_\"stupid\"_quotes?foo=\"bar\"",
+		contentLength:        unused,
 	},
 	{
 		name:                    "apachebench get",
@@ -402,9 +402,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            0,
-		//method: HTTP_POST,
-		requestUrl:    "/test",
-		contentLength: unused,
+		method:               GET,
+		requestUrl:           "/test",
+		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "0.0.0.0:5000"},
 			{"User-Agent", "ApacheBench/2.3"},
@@ -421,9 +421,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_POST,
-		requestUrl:    "/test.cgi?foo=bar?baz",
-		contentLength: unused,
+		method:               GET,
+		requestUrl:           "/test.cgi?foo=bar?baz",
+		contentLength:        unused,
 	},
 	/* Some clients, especially after a POST in a keep-alive connection,
 	 * will send an extra CRLF before the next request
@@ -438,9 +438,9 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		//method: HTTP_POST,
-		requestUrl:    "/test",
-		contentLength: unused,
+		method:               GET,
+		requestUrl:           "/test",
+		contentLength:        unused,
 	},
 	{
 		name:                    "upgrade request",
@@ -462,9 +462,9 @@ var requests = []message{
 		httpMajor:            1,
 		httpMinor:            1,
 		upgrade:              "Hot diggity dogg",
-		//method: HTTP_POST,
-		requestUrl:    "/demo",
-		contentLength: unused,
+		method:               GET,
+		requestUrl:           "/demo",
+		contentLength:        unused,
 		headers: [][2]string{{"Host", "example.com"},
 			{"Connection", "Upgrade"},
 			{"Sec-WebSocket-Key2", "12998 5 Y3 1  .P00"},
@@ -474,30 +474,60 @@ var requests = []message{
 			{"Origin", "http://example.com"},
 		},
 	},
+	{
+		name:                    "connect request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "CONNECT 0-home0.netscape.com:443 HTTP/1.0\r\n" +
+			"User-agent: Mozilla/1.1N\r\n" +
+			"Proxy-authorization: basic aGVsbG86d29ybGQ=\r\n" +
+			"\r\n" +
+			"some data\r\n" +
+			"and yet even more data",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            0,
+		upgrade:              "some data\r\nand yet even more data",
+		method:               GET,
+		requestUrl:           "0-home0.netscape.com:443",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"User-agent", "Mozilla/1.1N"},
+			{"Proxy-authorization", "basic aGVsbG86d29ybGQ="},
+		},
+	},
+	{
+		name:                    "report request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "REPORT /test HTTP/1.1\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               REPORT,
+		requestUrl:           "/test",
+		contentLength:        unused,
+	},
 	/*
 		{
-			name:                    "connect request",
+			name:                    "request with no http version",
 			hType:                   REQUEST,
 			messageCompleteCbCalled: true,
-			raw: "CONNECT 0-home0.netscape.com:443 HTTP/1.0\r\n" +
-				"User-agent: Mozilla/1.1N\r\n" +
-				"Proxy-authorization: basic aGVsbG86d29ybGQ=\r\n" +
-				"\r\n" +
-				"some data\r\n" +
-				"and yet even more data",
+			raw: "GET / \r\n" +
+				"\r\n",
 
 			shouldKeepAlive:      true,
 			messageCompleteOnEof: false,
-			httpMajor:            1,
-			httpMinor:            0,
-			upgrade:              "some data\r\nand yet even more data",
+			httpMajor:            0,
+			httpMinor:            9,
 			//method: HTTP_POST,
-			requestUrl:    "0-home0.netscape.com:443",
+			requestUrl:    "/",
 			contentLength: unused,
-			headers: [][2]string{
-				{"User-agent", "Mozilla/1.1N"},
-				{"Proxy-authorization", "basic aGVsbG86d29ybGQ="},
-			},
 		},
 	*/
 }
@@ -1290,12 +1320,12 @@ func test_Message(t *testing.T, m *message) {
 			// 如果有upgrade状态, 就不需要再重复送往数据
 			if p.ReadyUpgradeData() {
 				//if p.callMessageComplete && p.Upgrade {
-				got.upgrade = msg1Message[n1:]
+				got.upgrade = msg1Message[n1:] + msg2Message
 				msg1Message = ""
-			} else {
-
-				msg1Message = msg1Message[n1:]
+				goto test
 			}
+
+			msg1Message = msg1Message[n1:]
 		}
 
 		data = msg1Message + msg2Message
@@ -1323,6 +1353,7 @@ func test_Message(t *testing.T, m *message) {
 
 func Test_Message(t *testing.T) {
 	for _, req := range requests {
+		//for _, req := range requests[:len(requests)-1] {
 		test_Message(t, &req)
 		_ = req
 	}

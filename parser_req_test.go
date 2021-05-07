@@ -18,7 +18,7 @@ func Test_ParserResponse_RequestLine(t *testing.T) {
 	url := []byte("/somedir/page.html")
 	setting := &Setting{
 		URL: func(p *Parser, buf []byte) {
-			assert.Equal(t, url, buf)
+			assert.Equal(t, string(url), string(buf))
 		}, MessageBegin: func(p *Parser) {
 			messageBegin = true
 		},
