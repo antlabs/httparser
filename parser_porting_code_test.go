@@ -530,6 +530,111 @@ var requests = []message{
 			contentLength: unused,
 		},
 	*/
+	{
+		name:                    "m-search request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "M-SEARCH * HTTP/1.1\r\n" +
+			"HOST: 239.255.255.250:1900\r\n" +
+			"MAN: \"ssdp:discover\"\r\n" +
+			"ST: \"ssdp:all\"\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               M_SEARCH,
+		requestUrl:           "*",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"HOST", "239.255.255.250:1900"},
+			{"MAN", "\"ssdp:discover\""},
+			{"ST", "\"ssdp:all\""},
+		},
+	},
+	/*
+		{
+			name:                    "line folding in header value",
+			hType:                   REQUEST,
+			messageCompleteCbCalled: true,
+			raw: "GET / HTTP/1.1\r\n" +
+				"Line1:   abc\r\n" +
+				"\tdef\r\n" +
+				" ghi\r\n" +
+				"\t\tjkl\r\n" +
+				"  mno \r\n" +
+				"\t \tqrs\r\n" +
+				"Line2: \t line2\t\r\n" +
+				"Line3:\r\n" +
+				" line3\r\n" +
+				"Line4: \r\n" +
+				" \r\n" +
+				"Connection:\r\n" +
+				" close\r\n" +
+				"\r\n",
+
+			shouldKeepAlive:      true,
+			messageCompleteOnEof: false,
+			httpMajor:            1,
+			httpMinor:            1,
+			method:               GET,
+			requestUrl:           "/",
+			contentLength:        unused,
+			headers: [][2]string{
+				{"Line1", "abc\tdef ghi\t\tjkl  mno \t \tqrs"},
+				{"Line2", "line2\t"},
+				{"Line3", "line3"},
+				{"Line4", ""},
+				{"Connection", "close"},
+			},
+		},
+	*/
+	{
+		name:                    "host terminated by a query string",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "GET http://hypnotoad.org?hail=all HTTP/1.1\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               GET,
+		requestUrl:           "http://hypnotoad.org?hail=all",
+		contentLength:        unused,
+	},
+	{
+		name:                    "host:port terminated by a query string",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "GET http://hypnotoad.org:1234?hail=all HTTP/1.1\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               GET,
+		requestUrl:           "http://hypnotoad.org:1234?hail=all",
+		contentLength:        unused,
+	},
+	{
+		name:                    "host:port terminated by a space",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "GET http://hypnotoad.org:1234 HTTP/1.1\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               GET,
+		requestUrl:           "http://hypnotoad.org:1234",
+		contentLength:        unused,
+	},
 }
 
 var responses = []message{
@@ -1353,7 +1458,7 @@ func test_Message(t *testing.T, m *message) {
 
 func Test_Message(t *testing.T) {
 	for _, req := range requests {
-		//for _, req := range requests[:len(requests)-1] {
+		//for _, req := range requests[len(requests)-1:] {
 		test_Message(t, &req)
 		_ = req
 	}

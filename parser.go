@@ -553,6 +553,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			hasBody := p.hasTransferEncoding || p.hasContentLength && p.contentLength != unused
 
+			//fmt.Printf("p.Upgrade:%t, hasBody:%t, hasTrailing:%t\n", p.Upgrade, hasBody, p.hasTrailing)
 			if p.Upgrade && !hasBody || p.Method == CONNECT {
 				p.complete(setting)
 
