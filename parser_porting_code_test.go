@@ -635,6 +635,119 @@ var requests = []message{
 		requestUrl:           "http://hypnotoad.org:1234",
 		contentLength:        unused,
 	},
+	{
+		name:                    "PATCH request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "PATCH /file.txt HTTP/1.1\r\n" +
+			"Host: www.example.com\r\n" +
+			"Content-Type: application/example\r\n" +
+			"If-Match: \"e0023aa4e\"\r\n" +
+			"Content-Length: 10\r\n" +
+			"\r\n" +
+			"cccccccccc",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		body:                 "cccccccccc",
+		method:               PATCH,
+		requestUrl:           "/file.txt",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"Host", "www.example.com"},
+			{"Content-Type", "application/example"},
+			{"If-Match", "\"e0023aa4e\""},
+			{"Content-Length", "10"},
+		},
+	},
+	{
+		name:                    "connect caps request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "CONNECT HOME0.NETSCAPE.COM:443 HTTP/1.0\r\n" +
+			"User-agent: Mozilla/1.1N\r\n" +
+			"Proxy-authorization: basic aGVsbG86d29ybGQ=\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            0,
+		method:               PATCH,
+		requestUrl:           "HOME0.NETSCAPE.COM:443",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"User-agent", "Mozilla/1.1N"},
+			{"Proxy-authorization", "basic aGVsbG86d29ybGQ="},
+		},
+	},
+	{
+		name:                    "utf-8 path request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "GET /δ¶/δt/pope?q=1#narf HTTP/1.1\r\n" +
+			"Host: github.com\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               PATCH,
+		requestUrl:           "/δ¶/δt/pope?q=1#narf",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"Host", "github.com"},
+		},
+	},
+	{
+		name:                    "hostname underscore",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "CONNECT home_0.netscape.com:443 HTTP/1.0\r\n" +
+			"User-agent: Mozilla/1.1N\r\n" +
+			"Proxy-authorization: basic aGVsbG86d29ybGQ=\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            0,
+		method:               PATCH,
+		requestUrl:           "home_0.netscape.com:443",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"User-agent", "Mozilla/1.1N"},
+			{"Proxy-authorization", "basic aGVsbG86d29ybGQ="},
+		},
+	},
+	{
+		name:                    "eat CRLF between requests, no \"Connection: close\" header",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "POST / HTTP/1.1\r\n" +
+			"Host: www.example.com\r\n" +
+			"Content-Type: application/x-www-form-urlencoded\r\n" +
+			"Content-Length: 4\r\n" +
+			"\r\n" +
+			"q=42\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               PATCH,
+		requestUrl:           "/",
+		body:                 "q=42",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"Host", "www.example.com"},
+			{"Content-Type", "application/x-www-form-urlencoded"},
+			{"Content-Length", "4"},
+		},
+	},
 }
 
 var responses = []message{
