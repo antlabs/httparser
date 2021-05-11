@@ -748,6 +748,87 @@ var requests = []message{
 			{"Content-Length", "4"},
 		},
 	},
+	{
+		name:                    "PURGE request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "PURGE /file.txt HTTP/1.1\r\n" +
+			"Host: www.example.com\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               PURGE,
+		requestUrl:           "/file.txt",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"Host", "www.example.com"},
+		},
+	},
+	{
+		name:                    "SEARCH request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "SEARCH / HTTP/1.1\r\n" +
+			"Host: www.example.com\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               PATCH,
+		requestUrl:           "/",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"Host", "www.example.com"},
+		},
+	},
+	{
+		name:                    "host:port and basic_auth",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "GET http://a%12:b!&*$@hypnotoad.org:1234/toto HTTP/1.1\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               PATCH,
+		requestUrl:           "http://a%12:b!&*$@hypnotoad.org:1234/toto",
+		contentLength:        unused,
+	},
+	/*
+		{
+			name:                    "chunked with content-length set, allow_chunked_length flag is set",
+			hType:                   REQUEST,
+			messageCompleteCbCalled: true,
+			raw: "POST /chunked_w_content_length HTTP/1.1\r\n" +
+				"Content-Length: 10\r\n" +
+				"Transfer-Encoding: chunked\r\n" +
+				"\r\n" +
+				"5; ilovew3;whattheluck=aretheseparametersfor\r\nhello\r\n" +
+				"6; blahblah; blah\r\n world\r\n" +
+				"0\r\n" +
+				"\r\n",
+
+			shouldKeepAlive:      true,
+			messageCompleteOnEof: false,
+			httpMajor:            1,
+			httpMinor:            1,
+			method:               PATCH,
+			requestUrl:           "/chunked_w_content_length",
+			contentLength:        unused,
+			headers: [][2]string{
+				{"Content-Length", "10"},
+				{"Transfer-Encoding", "chunked"},
+			},
+			body: "hello world",
+		},
+	*/
 }
 
 var responses = []message{
