@@ -801,6 +801,96 @@ var requests = []message{
 		requestUrl:           "http://a%12:b!&*$@hypnotoad.org:1234/toto",
 		contentLength:        unused,
 	},
+	// 42
+	{
+		name:                    "source request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "SOURCE /music/sweet/music HTTP/1.1\r\n" +
+			"Host: example.com\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               PATCH,
+		requestUrl:           "/music/sweet/music",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"Host", "example.com"},
+		},
+	},
+	// 43
+	{
+		name:                    "source request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "SOURCE /music/sweet/music ICE/1.0\r\n" +
+			"Host: example.com\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            0,
+		method:               PATCH,
+		requestUrl:           "/music/sweet/music",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"Host", "example.com"},
+		},
+	},
+	// 44
+	{
+		name:                    "post - multi coding transfer-encoding chunked body",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "POST / HTTP/1.1\r\n" +
+			"Transfer-Encoding: deflate, chunked\r\n" +
+			"\r\n" +
+			"1e\r\nall your base are belong to us\r\n" +
+			"0\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               PATCH,
+		requestUrl:           "/",
+		contentLength:        unused,
+		body:                 "all your base are belong to us",
+		headers: [][2]string{
+			{"Transfer-Encoding", "deflate, chunked"},
+		},
+	},
+	/*
+		{
+			name:                    "post - multi line coding transfer-encoding chunked body",
+			hType:                   REQUEST,
+			messageCompleteCbCalled: true,
+			raw: "POST / HTTP/1.1\r\n" +
+				"Transfer-Encoding: deflate,\r\n" +
+				" chunked\r\n" +
+				"\r\n" +
+				"1e\r\nall your base are belong to us\r\n" +
+				"0\r\n" +
+				"\r\n",
+
+			shouldKeepAlive:      true,
+			messageCompleteOnEof: false,
+			httpMajor:            1,
+			httpMinor:            1,
+			method:               POST,
+			requestUrl:           "/",
+			contentLength:        unused,
+			headers: [][2]string{
+				{"Transfer-Encoding", "deflate, chunked"},
+			},
+			body: "all your base are belong to us",
+		},
+	*/
 	/*
 		{
 			name:                    "chunked with content-length set, allow_chunked_length flag is set",
