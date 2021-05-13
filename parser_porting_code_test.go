@@ -801,6 +801,78 @@ var requests = []message{
 		requestUrl:           "http://a%12:b!&*$@hypnotoad.org:1234/toto",
 		contentLength:        unused,
 	},
+	// 39
+	{
+		name:                    "connect with body request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "CONNECT foo.bar.com:443 HTTP/1.0\r\n" +
+			"User-agent: Mozilla/1.1N\r\n" +
+			"Proxy-authorization: basic aGVsbG86d29ybGQ=\r\n" +
+			"Content-Length: 10\r\n" +
+			"\r\n" +
+			"blarfcicle",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            0,
+		method:               CONNECT,
+		requestUrl:           "foo.bar.com:443",
+		contentLength:        unused,
+		upgrade:              "blarfcicle",
+		headers: [][2]string{
+			{"User-agent", "Mozilla/1.1N"},
+			{"Proxy-authorization", "basic aGVsbG86d29ybGQ="},
+			{"Content-Length", "10"},
+		},
+	},
+	// 40
+	{
+		name:                    "link request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "LINK /images/my_dog.jpg HTTP/1.1\r\n" +
+			"Host: example.com\r\n" +
+			"Link: <http://example.com/profiles/joe>; rel=\"tag\"\r\n" +
+			"Link: <http://example.com/profiles/sally>; rel=\"tag\"\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               LINK,
+		requestUrl:           "/images/my_dog.jpg",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"Host", "example.com"},
+			{"Link", "<http://example.com/profiles/joe>; rel=\"tag\""},
+			{"Link", "<http://example.com/profiles/sally>; rel=\"tag\""},
+		},
+	},
+	// 41
+	{
+		name:                    "unlink request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "UNLINK /images/my_dog.jpg HTTP/1.1\r\n" +
+			"Host: example.com\r\n" +
+			"Link: <http://example.com/profiles/sally>; rel=\"tag\"\r\n" +
+			"\r\n",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               UNLINK,
+		requestUrl:           "/images/my_dog.jpg",
+		contentLength:        unused,
+		headers: [][2]string{
+			{"Host", "example.com"},
+			{"Link", "<http://example.com/profiles/sally>; rel=\"tag\""},
+		},
+	},
 	// 42
 	{
 		name:                    "source request",
