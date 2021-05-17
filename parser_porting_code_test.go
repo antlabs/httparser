@@ -801,6 +801,62 @@ var requests = []message{
 		requestUrl:           "http://a%12:b!&*$@hypnotoad.org:1234/toto",
 		contentLength:        unused,
 	},
+	// 37
+	/*
+		{
+			name:                    "multiple connection header values with folding and lws",
+			hType:                   REQUEST,
+			messageCompleteCbCalled: true,
+			raw: "GET /demo HTTP/1.1\r\n" +
+				"Connection: keep-alive, \r\n upgrade\r\n" +
+				"Upgrade: WebSocket\r\n" +
+				"\r\n" +
+				"Hot diggity dogg",
+
+			shouldKeepAlive:      true,
+			messageCompleteOnEof: false,
+			httpMajor:            1,
+			httpMinor:            1,
+			method:               PATCH,
+			requestUrl:           "/demo",
+			upgrade:              "Hot diggity dogg",
+			headers: [][2]string{
+				{"Connection", "keep-alive,  upgrade"},
+				{"Upgrade", "WebSocket"},
+			},
+			contentLength: unused,
+		},
+	*/
+	// 38
+	{
+		name:                    "upgrade post request",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "POST /demo HTTP/1.1\r\n" +
+			"Host: example.com\r\n" +
+			"Connection: Upgrade\r\n" +
+			"Upgrade: HTTP/2.0\r\n" +
+			"Content-Length: 15\r\n" +
+			"\r\n" +
+			"sweet post body" +
+			"Hot diggity dogg",
+
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               PATCH,
+		requestUrl:           "/demo",
+		upgrade:              "Hot diggity dogg",
+		body:                 "sweet post body",
+		headers: [][2]string{
+			{"Host", "example.com"},
+			{"Connection", "Upgrade"},
+			{"Upgrade", "HTTP/2.0"},
+			{"Content-Length", "15"},
+		},
+		contentLength: unused,
+	},
 	// 39
 	{
 		name:                    "connect with body request",
