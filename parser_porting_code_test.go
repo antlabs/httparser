@@ -801,6 +801,69 @@ var requests = []message{
 		requestUrl:           "http://a%12:b!&*$@hypnotoad.org:1234/toto",
 		contentLength:        unused,
 	},
+	//35
+	/*
+		{
+			name:                    "multiple connection header values with folding",
+			hType:                   REQUEST,
+			messageCompleteCbCalled: true,
+			raw: "GET /demo HTTP/1.1\r\n" +
+				"Host: example.com\r\n" +
+				"Connection: Something,\r\n" +
+				" Upgrade, ,Keep-Alive\r\n" +
+				"Sec-WebSocket-Key2: 12998 5 Y3 1  .P00\r\n" +
+				"Sec-WebSocket-Protocol: sample\r\n" +
+				"Upgrade: WebSocket\r\n" +
+				"Sec-WebSocket-Key1: 4 @1  46546xW%0l 1 5\r\n" +
+				"Origin: http://example.com\r\n" +
+				"\r\n" +
+				"Hot diggity dogg",
+
+			shouldKeepAlive:      true,
+			messageCompleteOnEof: false,
+			httpMajor:            1,
+			httpMinor:            1,
+			method:               PATCH,
+			requestUrl:           "/demo",
+			contentLength:        unused,
+			upgrade:              "Hot diggity dogg",
+			headers: [][2]string{
+				{"Host", "example.com"},
+				{"Connection", "Something, Upgrade, ,Keep-Alive"},
+				{"Sec-WebSocket-Key2", "12998 5 Y3 1  .P00"},
+				{"Sec-WebSocket-Protocol", "sample"},
+				{"Upgrade", "WebSocket"},
+				{"Sec-WebSocket-Key1", "4 @1  46546xW%0l 1 5"},
+				{"Origin", "http://example.com"},
+			},
+		},
+	*/
+	// 36
+	/*
+		{
+			name:                    "multiple connection header values with folding and lws",
+			hType:                   REQUEST,
+			messageCompleteCbCalled: true,
+			raw: "GET /demo HTTP/1.1\r\n" +
+				"Connection: keep-alive, upgrade\r\n" +
+				"Upgrade: WebSocket\r\n" +
+				"\r\n" +
+				"Hot diggity dogg",
+
+			shouldKeepAlive:      true,
+			messageCompleteOnEof: false,
+			httpMajor:            1,
+			httpMinor:            1,
+			method:               PATCH,
+			requestUrl:           "/demo",
+			contentLength:        unused,
+			upgrade:              "Hot diggity dogg",
+			headers: [][2]string{
+				{"Connection", "keep-alive, upgrade"},
+				{"Upgrade", "WebSocket"},
+			},
+		},
+	*/
 	// 37
 	/*
 		{
