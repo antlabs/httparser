@@ -839,31 +839,29 @@ var requests = []message{
 		},
 	*/
 	// 36
-	/*
-		{
-			name:                    "multiple connection header values with folding and lws",
-			hType:                   REQUEST,
-			messageCompleteCbCalled: true,
-			raw: "GET /demo HTTP/1.1\r\n" +
-				"Connection: keep-alive, upgrade\r\n" +
-				"Upgrade: WebSocket\r\n" +
-				"\r\n" +
-				"Hot diggity dogg",
+	{
+		name:                    "multiple connection header values with folding and lws",
+		hType:                   REQUEST,
+		messageCompleteCbCalled: true,
+		raw: "GET /demo HTTP/1.1\r\n" +
+			"Connection: keep-alive, upgrade\r\n" +
+			"Upgrade: WebSocket\r\n" +
+			"\r\n" +
+			"Hot diggity dogg",
 
-			shouldKeepAlive:      true,
-			messageCompleteOnEof: false,
-			httpMajor:            1,
-			httpMinor:            1,
-			method:               PATCH,
-			requestUrl:           "/demo",
-			contentLength:        unused,
-			upgrade:              "Hot diggity dogg",
-			headers: [][2]string{
-				{"Connection", "keep-alive, upgrade"},
-				{"Upgrade", "WebSocket"},
-			},
+		shouldKeepAlive:      true,
+		messageCompleteOnEof: false,
+		httpMajor:            1,
+		httpMinor:            1,
+		method:               PATCH,
+		requestUrl:           "/demo",
+		contentLength:        unused,
+		upgrade:              "Hot diggity dogg",
+		headers: [][2]string{
+			{"Connection", "keep-alive, upgrade"},
+			{"Upgrade", "WebSocket"},
 		},
-	*/
+	},
 	// 37
 	/*
 		{
@@ -1111,6 +1109,8 @@ var requests = []message{
 		},
 	*/
 }
+
+var requestsDebug = []message{}
 
 var responses = []message{
 	{
@@ -1932,8 +1932,14 @@ func test_Message(t *testing.T, m *message) {
 }
 
 func Test_Message(t *testing.T) {
+	/*
+		for _, req := range requestsDebug {
+			//for _, req := range requests[len(requests)-1:] {
+			test_Message(t, &req)
+			_ = req
+		}
+	*/
 	for _, req := range requests {
-		//for _, req := range requests[len(requests)-1:] {
 		test_Message(t, &req)
 		_ = req
 	}

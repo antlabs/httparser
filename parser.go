@@ -40,6 +40,7 @@ var (
 )
 
 var (
+	bytesSep                    = []byte(",")
 	bytesContentLength          = []byte("Content-Length")
 	bytesTransferEncoding       = []byte("Transfer-Encoding")
 	bytesChunked                = []byte("chunked")
@@ -490,30 +491,38 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				setting.HeaderValue(p, hValue)
 			}
 
-			switch p.headerCurrState {
-			case hConnection:
-				switch {
-				case bytes.Index(hValue, bytesClose) != -1:
-					p.hasConnectionClose = true
-				case bytes.EqualFold(hValue, bytesUpgrade) == true:
-					p.hasConnectionUpgrade = true
-				}
-			case hContentLength:
-				n, err := strconv.Atoi(BytesToString(bytes.TrimSpace(hValue)))
-				if err != nil {
-					return i, err
-				}
+			err2 := Split(hValue, bytesSep, func(hValue []byte) error {
 
-				p.contentLength = int32(n)
-				p.hasContentLength = true
-				p.headerCurrState = hGeneral
-			case hTransferEncoding:
-				pos := bytes.Index(hValue, bytesChunked)
-				// 没有chunked值，归类到通用http header
-				if pos == -1 {
+				hValue = bytes.TrimSpace(hValue)
+				switch p.headerCurrState {
+				case hConnection:
+					switch {
+					case bytes.Index(hValue, bytesClose) != -1:
+						p.hasConnectionClose = true
+					case bytes.EqualFold(hValue, bytesUpgrade) == true:
+						p.hasConnectionUpgrade = true
+					}
+				case hContentLength:
+					n, err := strconv.Atoi(BytesToString(bytes.TrimSpace(hValue)))
+					if err != nil {
+						return err
+					}
+
+					p.contentLength = int32(n)
+					p.hasContentLength = true
 					p.headerCurrState = hGeneral
+				case hTransferEncoding:
+					pos := bytes.Index(hValue, bytesChunked)
+					// 没有chunked值，归类到通用http header
+					if pos == -1 {
+						p.headerCurrState = hGeneral
+					}
+					p.hasTransferEncoding = true
 				}
-				p.hasTransferEncoding = true
+				return nil
+			})
+			if err2 != nil {
+				return i, err2
 			}
 
 			i += end
