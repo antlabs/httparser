@@ -40,7 +40,7 @@ var (
 )
 
 var (
-	bytesSep                    = []byte(",")
+	bytesCommaSep               = []byte(",")
 	bytesContentLength          = []byte("Content-Length")
 	bytesTransferEncoding       = []byte("Transfer-Encoding")
 	bytesChunked                = []byte("chunked")
@@ -491,7 +491,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				setting.HeaderValue(p, hValue)
 			}
 
-			err2 := Split(hValue, bytesSep, func(hValue []byte) error {
+			err2 := Split(hValue, bytesCommaSep, func(hValue []byte) error {
 
 				hValue = bytes.TrimSpace(hValue)
 				switch p.headerCurrState {
