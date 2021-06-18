@@ -442,6 +442,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				setting.HeaderField(p, field)
 			}
 
+			field = bytes.TrimRight(field, " ")
 			c2 := c | 0x20
 			if c2 == 'c' || c2 == 't' {
 				if bytes.EqualFold(field, bytesContentLength) {

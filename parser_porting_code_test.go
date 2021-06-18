@@ -110,6 +110,106 @@ func (m *message) eq(t *testing.T, m2 *message) bool {
 
 var requests = []message{
 	{
+		name:                    "issue 7 1",
+		hType:                   REQUEST,
+		raw:                     "POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nAccept-Encoding : gzip \r\n\r\n",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		method:                  GET,
+		requestUrl:              "/echo",
+		contentLength:           unused,
+		headers: [][2]string{
+			{"Host", "localhost:8080"},
+			{"Connection", "close "},
+			{"Accept-Encoding ", "gzip "},
+		},
+	},
+	{
+		name:                    "issue 7 2",
+		hType:                   REQUEST,
+		raw:                     "POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nContent-Length :  0\r\nAccept-Encoding : gzip \r\n\r\n",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		method:                  GET,
+		requestUrl:              "/echo",
+		contentLength:           unused,
+		headers: [][2]string{
+			{"Host", "localhost:8080"},
+			{"Connection", "close "},
+			{"Content-Length ", " 0"},
+			{"Accept-Encoding ", "gzip "},
+		},
+	},
+	{
+		name:                    "issue 7 3",
+		hType:                   REQUEST,
+		raw:                     "POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nContent-Length :  5\r\nAccept-Encoding : gzip \r\n\r\nhello",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		method:                  GET,
+		requestUrl:              "/echo",
+		contentLength:           unused,
+		body:                    "hello",
+		headers: [][2]string{
+			{"Host", "localhost:8080"},
+			{"Connection", "close "},
+			{"Content-Length ", " 5"},
+			{"Accept-Encoding ", "gzip "},
+		},
+	},
+	{
+		name:                    "issue 7 4",
+		hType:                   REQUEST,
+		raw:                     "POST / HTTP/1.1\r\nHost: localhost:1235\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nAccept-Encoding: gzip\r\n\r\n4\r\nbody\r\n0\r\n\r\n",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		method:                  GET,
+		requestUrl:              "/",
+		contentLength:           unused,
+		body:                    "body",
+		headers: [][2]string{
+			{"Host", "localhost:1235"},
+			{"User-Agent", "Go-http-client/1.1"},
+			{"Transfer-Encoding", "chunked"},
+			{"Accept-Encoding", "gzip"},
+		},
+	},
+	{
+		name:                    "issue 7 5",
+		hType:                   REQUEST,
+		raw:                     "POST / HTTP/1.1\r\nHost: localhost:1235\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nTrailer: Md5,Size\r\nAccept-Encoding: gzip\r\n\r\n4\r\nbody\r\n0\r\nMd5: 841a2d689ad86bd1611447453c22c6fc\r\nSize: 4\r\n\r\n",
+		shouldKeepAlive:         true,
+		messageCompleteOnEof:    false,
+		messageCompleteCbCalled: true,
+		httpMajor:               1,
+		httpMinor:               1,
+		method:                  GET,
+		requestUrl:              "/",
+		contentLength:           unused,
+		body:                    "body",
+		headers: [][2]string{
+			{"Host", "localhost:1235"},
+			{"User-Agent", "Go-http-client/1.1"},
+			{"Transfer-Encoding", "chunked"},
+			{"Trailer", "Md5,Size"},
+			{"Accept-Encoding", "gzip"},
+			{"Md5", "841a2d689ad86bd1611447453c22c6fc"},
+			{"Size", "4"},
+		},
+	},
+	{
 		name:  "curl get",
 		hType: REQUEST,
 		raw: "GET /test HTTP/1.1\r\n" +
@@ -1894,6 +1994,7 @@ func test_Message(t *testing.T, m *message) {
 			data string
 		)
 
+		// 模拟第1次读包
 		if msg1len > 0 {
 			n1, err1 = parse(p, msg1Message)
 			assert.NoError(t, err1)
@@ -1908,6 +2009,7 @@ func test_Message(t *testing.T, m *message) {
 			msg1Message = msg1Message[n1:]
 		}
 
+		// 模拟第2次读包
 		data = msg1Message + msg2Message
 		n2, err = parse(p, data)
 		if got.messageCompleteCbCalled && p.Upgrade {
@@ -1918,6 +2020,7 @@ func test_Message(t *testing.T, m *message) {
 
 	test:
 
+		// flush 解析器
 		_, err = parse(p, "")
 		assert.NoError(t, err)
 		if b := m.eq(t, got); !b {
