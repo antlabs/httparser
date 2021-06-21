@@ -63,6 +63,11 @@ func (m *message) eq(t *testing.T, m2 *message) bool {
 		return false
 	}
 
+	b = assert.Equal(t, m.method, m2.method, "method")
+	if !b {
+		return false
+	}
+
 	b = assert.Equal(t, m.headers, m2.headers)
 	if !b {
 		return false
@@ -118,7 +123,7 @@ var requests = []message{
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
-		method:                  GET,
+		method:                  POST,
 		requestUrl:              "/echo",
 		contentLength:           unused,
 		headers: [][2]string{
@@ -136,7 +141,7 @@ var requests = []message{
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
-		method:                  GET,
+		method:                  POST,
 		requestUrl:              "/echo",
 		contentLength:           unused,
 		headers: [][2]string{
@@ -155,7 +160,7 @@ var requests = []message{
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
-		method:                  GET,
+		method:                  POST,
 		requestUrl:              "/echo",
 		contentLength:           unused,
 		body:                    "hello",
@@ -175,7 +180,7 @@ var requests = []message{
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
-		method:                  GET,
+		method:                  POST,
 		requestUrl:              "/",
 		contentLength:           unused,
 		body:                    "body",
@@ -195,7 +200,7 @@ var requests = []message{
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
-		method:                  GET,
+		method:                  POST,
 		requestUrl:              "/",
 		contentLength:           unused,
 		body:                    "body",
@@ -485,7 +490,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		method:               POST,
+		method:               GET,
 		requestUrl:           "/with_\"stupid\"_quotes?foo=\"bar\"",
 		contentLength:        unused,
 	},
@@ -590,7 +595,7 @@ var requests = []message{
 		httpMajor:            1,
 		httpMinor:            0,
 		upgrade:              "some data\r\nand yet even more data",
-		method:               GET,
+		method:               CONNECT,
 		requestUrl:           "0-home0.netscape.com:443",
 		contentLength:        unused,
 		headers: [][2]string{
@@ -775,7 +780,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            0,
-		method:               PATCH,
+		method:               CONNECT,
 		requestUrl:           "HOME0.NETSCAPE.COM:443",
 		contentLength:        unused,
 		headers: [][2]string{
@@ -795,7 +800,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		method:               PATCH,
+		method:               GET,
 		requestUrl:           "/δ¶/δt/pope?q=1#narf",
 		contentLength:        unused,
 		headers: [][2]string{
@@ -815,7 +820,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            0,
-		method:               PATCH,
+		method:               CONNECT,
 		requestUrl:           "home_0.netscape.com:443",
 		contentLength:        unused,
 		headers: [][2]string{
@@ -838,7 +843,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		method:               PATCH,
+		method:               POST,
 		requestUrl:           "/",
 		body:                 "q=42",
 		contentLength:        unused,
@@ -879,7 +884,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		method:               PATCH,
+		method:               SEARCH,
 		requestUrl:           "/",
 		contentLength:        unused,
 		headers: [][2]string{
@@ -897,7 +902,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		method:               PATCH,
+		method:               GET,
 		requestUrl:           "http://a%12:b!&*$@hypnotoad.org:1234/toto",
 		contentLength:        unused,
 	},
@@ -953,7 +958,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		method:               PATCH,
+		method:               GET,
 		requestUrl:           "/demo",
 		contentLength:        unused,
 		upgrade:              "Hot diggity dogg",
@@ -1006,7 +1011,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		method:               PATCH,
+		method:               POST,
 		requestUrl:           "/demo",
 		upgrade:              "Hot diggity dogg",
 		body:                 "sweet post body",
@@ -1103,7 +1108,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		method:               PATCH,
+		method:               SOURCE,
 		requestUrl:           "/music/sweet/music",
 		contentLength:        unused,
 		headers: [][2]string{
@@ -1123,7 +1128,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            0,
-		method:               PATCH,
+		method:               SOURCE,
 		requestUrl:           "/music/sweet/music",
 		contentLength:        unused,
 		headers: [][2]string{
@@ -1146,7 +1151,7 @@ var requests = []message{
 		messageCompleteOnEof: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		method:               PATCH,
+		method:               POST,
 		requestUrl:           "/",
 		contentLength:        unused,
 		body:                 "all your base are belong to us",
@@ -1965,6 +1970,7 @@ var settingTest Setting = Setting{
 	},
 	MessageComplete: func(p *Parser) {
 		m := p.GetUserData().(*message)
+		m.method = p.Method
 		m.messageCompleteCbCalled = true
 		m.statusCode = int(p.StatusCode)
 		m.httpMajor = uint16(p.Major)
