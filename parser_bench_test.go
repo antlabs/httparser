@@ -39,7 +39,6 @@ func Benchmark_Parser(b *testing.B) {
 		_, err := p.Execute(&setting, benchData)
 		if err != nil {
 			panic(err.Error())
-			return
 		}
 		p.Reset()
 	}

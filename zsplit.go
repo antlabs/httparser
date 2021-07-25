@@ -26,4 +26,5 @@ func genSplit(s, sep []byte, sepSave int, cb func([]byte) error) error {
 	return cb(s)
 }
 
+// Split 分割字符串
 func Split(s, sep []byte, cb func([]byte) error) error { return genSplit(s, sep, 0, cb) }

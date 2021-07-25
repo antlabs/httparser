@@ -2,6 +2,7 @@ package httparser
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"testing"
 
@@ -122,7 +123,7 @@ func Test_ParserResponse_RequestBody(t *testing.T) {
 	assert.True(t, messageBegin)
 	assert.True(t, messageComplete)
 	assert.True(t, headersComplete)
-	assert.True(t, p.Eof())
+	assert.True(t, p.EOF())
 
 	//fmt.Printf("##:%s", stateTab[p.currState])
 }
@@ -219,7 +220,7 @@ func Test_ParserResponse_RequestBody2(t *testing.T) {
 	assert.True(t, messageBegin)
 	assert.True(t, messageComplete)
 	assert.True(t, headersComplete)
-	assert.True(t, p.Eof())
+	assert.True(t, p.EOF())
 
 	//fmt.Printf("##:%s", stateTab[p.currState])
 }
@@ -294,7 +295,7 @@ func Test_ParserRequest_chunked_segment(t *testing.T) {
 			//解析
 			success, err := p.Execute(&setting, currSentData)
 			if err != nil {
-				//panic(err.Error() + fmt.Sprintf(" size:%d", size))
+				panic(err.Error() + fmt.Sprintf(" size:%d", size))
 			}
 
 			if success != len(currSentData) {

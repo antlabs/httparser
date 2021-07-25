@@ -98,7 +98,7 @@ func Test_ParserResponse_RequestBody_BOTH(t *testing.T) {
 	assert.True(t, messageBegin)
 	assert.True(t, messageComplete)
 	assert.True(t, headersComplete)
-	assert.True(t, p.Eof())
+	assert.True(t, p.EOF())
 
 	//fmt.Printf("##:%s", stateTab[p.currState])
 }
@@ -153,5 +153,5 @@ func Test_ParserResponse_Chunked_Both(t *testing.T) {
 	assert.Equal(t, p.Minor, uint8(1))
 	assert.True(t, messageBegin)
 	assert.Equal(t, sentTotal, parserTotal)
-	assert.True(t, p.Eof())
+	assert.True(t, p.EOF())
 }

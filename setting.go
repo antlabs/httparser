@@ -14,7 +14,7 @@
 
 package httparser
 
-// 查阅#6 看设计变更原因
+// Setting 查阅#6 看设计变更原因
 type Setting struct {
 	// 解析开始
 	MessageBegin func(*Parser)
@@ -36,11 +36,15 @@ type Setting struct {
 	MessageComplete func(*Parser)
 }
 
+// ReqOrRsp 请求还是响应
 type ReqOrRsp uint8
 
 const (
+	// REQUEST 解析请求包
 	REQUEST ReqOrRsp = iota + 1
+	// RESPONSE 解析响应包
 	RESPONSE
+	// BOTH 让解析器根据报文自己判断
 	BOTH
 )
 
@@ -122,7 +126,7 @@ const (
 	// 快要结束
 	messageAlmostDone
 	// 一直读到socket eof
-	bodyIdentityEof
+	bodyIdentityEOF
 	// 解析结束
 	messageDone
 )
@@ -162,7 +166,7 @@ var stateTab = []string{
 	chunkedDataAlmostDone:    "chunkedDataAlmostDone",
 	chunkedDataDone:          "chunkedDataDone",
 	messageAlmostDone:        "messageAlmostDone",
-	bodyIdentityEof:          "bodyIdentityEof",
+	bodyIdentityEOF:          "bodyIdentityEOF",
 	messageDone:              "messageDone",
 }
 

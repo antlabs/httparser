@@ -25,14 +25,22 @@ import (
 )
 
 var (
-	ErrMethod          = errors.New("http method fail")
-	ErrHTTPVersion     = errors.New("http version")
-	ErrHTTPVersionNum  = errors.New("http version number")
-	ErrHeaderOverflow  = errors.New("http header overflow")
-	ErrNoEndLF         = errors.New("http there is no end symbol")
-	ErrChunkSize       = errors.New("http wrong chunk size")
-	ErrReqMethod       = errors.New("http request wrong method")
-	ErrRequestLineCRLF = errors.New("http request line wrong CRLF")
+	// ErrMethod 错误的method
+	ErrMethod = errors.New("http method fail")
+	// ErrStatusLineHTTP 状态行前面的HTTP错误
+	ErrStatusLineHTTP = errors.New("http status line http")
+	// ErrHTTPVersionNum 错误的http版本号
+	ErrHTTPVersionNum = errors.New("http version number")
+	// ErrHeaderOverflow http header包太大
+	ErrHeaderOverflow = errors.New("http header overflow")
+	// ErrNoEndLF 没有\n
+	ErrNoEndLF = errors.New("http there is no end symbol")
+	// ErrChunkSize chunked表示长度的字符串错了
+	ErrChunkSize = errors.New("http wrong chunk size")
+	// ErrReqMethod 错误的请求方法字符串
+	ErrReqMethod = errors.New("http request wrong method")
+	// ErrRequestLineLF 请求行没有\n
+	ErrRequestLineLF = errors.New("http request line wrong LF")
 )
 
 var (
@@ -40,20 +48,21 @@ var (
 )
 
 var (
-	bytesCommaSep               = []byte(",")
-	bytesContentLength          = []byte("Content-Length")
-	bytesTransferEncoding       = []byte("Transfer-Encoding")
-	bytesChunked                = []byte("chunked")
-	bytesConnection             = []byte("Connection")
-	bytesClose                  = []byte("close")
-	bytesUpgrade                = []byte("upgrade")
-	bytesSpace                  = []byte(" ")
-	MaxHeaderSize         int32 = 4096 //默认http header单行最大限制为4k
+	bytesCommaSep         = []byte(",")
+	bytesContentLength    = []byte("Content-Length")
+	bytesTransferEncoding = []byte("Transfer-Encoding")
+	bytesChunked          = []byte("chunked")
+	bytesConnection       = []byte("Connection")
+	bytesClose            = []byte("close")
+	bytesUpgrade          = []byte("upgrade")
+	bytesSpace            = []byte(" ")
+	// MaxHeaderSize 表示 http header单行最大限制为4k
+	MaxHeaderSize int32 = 4096
 )
 
 const unused = -1
 
-// http 1.1 or http 1.0解析器
+// Parser http 1.1 or http 1.0解析器
 type Parser struct {
 	hType                ReqOrRsp    //解析器的类型，解析请求还是响应
 	Method               Method      //记录request的method
@@ -77,14 +86,14 @@ type Parser struct {
 	userData interface{}
 }
 
-// 解析器构造函数
+// New 解析器构造函数
 func New(t ReqOrRsp) *Parser {
 	p := &Parser{}
 	p.Init(t)
 	return p
 }
 
-// 解析器Init函数
+// Init 解析器Init函数
 func (p *Parser) Init(t ReqOrRsp) {
 
 	p.currState = newState(t)
@@ -97,7 +106,7 @@ func (p *Parser) Init(t ReqOrRsp) {
 
 }
 
-// 如果ReadyUpgradeData为true 说明已经有Upgrade Data数据, 并且http数据已经成功解析完成
+// ReadyUpgradeData 如果ReadyUpgradeData为true 说明已经有Upgrade Data数据, 并且http数据已经成功解析完成
 func (p *Parser) ReadyUpgradeData() bool {
 	return p.callMessageComplete && p.Upgrade
 }
@@ -109,6 +118,7 @@ func (p *Parser) complete(s *Setting) {
 	}
 }
 
+// SetUserData 的设计出发点和作用
 // 一般情况，可以使用Setting里面函数闭包特性捕获调用者私有变量
 // 好像提供SetUserData没有必要性
 // 但是从
@@ -119,7 +129,7 @@ func (p *Parser) SetUserData(d interface{}) {
 	p.userData = d
 }
 
-// 获取SetuserData函数设置的私有变量
+// GetUserData 获取SetuserData函数设置的私有变量
 func (p *Parser) GetUserData() interface{} {
 	return p.userData
 }
@@ -155,6 +165,7 @@ func (p *Parser) GetUserData() interface{} {
 // 设计思路修改
 // 为了适应流量解析的场景，状态机的状态会更碎一点
 
+// Execute 执行解析器
 func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) {
 	currState := p.currState
 
@@ -167,7 +178,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 	if len(buf) == 0 {
 		switch currState {
-		case bodyIdentityEof:
+		case bodyIdentityEOF:
 			p.complete(setting)
 			return 0, nil
 		default:
@@ -251,7 +262,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "MERGE"):
 				p.Method = MERGE
 			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "M-SEARCH"):
-				p.Method = M_SEARCH
+				p.Method = MSEARCH
 			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "MKCALENDAR"):
 				p.Method = MKCALENDAR
 			case strings.EqualFold(*(*string)(unsafe.Pointer(&buf2)), "NOTIFY"):
@@ -324,14 +335,14 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 		case reqRequestLineAlomstDone:
 			if c != '\n' {
-				return 0, ErrRequestLineCRLF
+				return 0, ErrRequestLineLF
 			}
 
 			currState = headerField
 
 		case startRsp:
 			if c != 'H' {
-				return 0, ErrHTTPVersion
+				return 0, ErrStatusLineHTTP
 			}
 
 			if setting.MessageBegin != nil {
@@ -347,7 +358,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			if !bytes.Equal(buf[i:i+len(strTTPslash)], strTTPslash) {
-				return 0, ErrHTTPVersion
+				return 0, ErrStatusLineHTTP
 			}
 
 			i += len(strTTPslash) - 1
@@ -498,9 +509,9 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				switch p.headerCurrState {
 				case hConnection:
 					switch {
-					case bytes.Index(hValue, bytesClose) != -1:
+					case bytes.Contains(hValue, bytesClose):
 						p.hasConnectionClose = true
-					case bytes.EqualFold(hValue, bytesUpgrade) == true:
+					case bytes.EqualFold(hValue, bytesUpgrade):
 						p.hasConnectionUpgrade = true
 					}
 				case hContentLength:
@@ -598,14 +609,14 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				continue
 			}
 
-			if p.Eof() {
+			if p.EOF() {
 				currState = messageDone
 
 				p.complete(setting)
 				continue
 			}
 			//一直读到socket eof
-			currState = bodyIdentityEof
+			currState = bodyIdentityEOF
 		case httpBody:
 			if p.hasContentLength {
 				nread := min(int32(len(buf[i:])), p.contentLength)
@@ -627,9 +638,9 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 				}
 			}
 
-		case bodyIdentityEof:
+		case bodyIdentityEOF:
 			if setting.Body != nil {
-				setting.Body(p, buf[i:len(buf)])
+				setting.Body(p, buf[i:])
 				i = len(buf) - 1
 			}
 
@@ -716,13 +727,13 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 	switch currState {
 	case reqURL:
-		if setting.URL != nil && len(buf[urlStartIndex:len(buf)]) > 0 {
-			setting.URL(p, buf[urlStartIndex:len(buf)])
+		if setting.URL != nil && len(buf[urlStartIndex:]) > 0 {
+			setting.URL(p, buf[urlStartIndex:])
 		}
 
 	case rspStatus:
-		if setting.Status != nil && len(buf[reasonPhraseIndex:len(buf)]) > 0 {
-			setting.Status(p, buf[reasonPhraseIndex:len(buf)])
+		if setting.Status != nil && len(buf[reasonPhraseIndex:]) > 0 {
+			setting.Status(p, buf[reasonPhraseIndex:])
 		}
 	}
 
@@ -742,6 +753,7 @@ func newState(t ReqOrRsp) state {
 	return startReqOrRsp
 }
 
+// Reset 重置状态
 func (p *Parser) Reset() {
 	p.currState = newState(p.hType)
 	p.headerCurrState = hGeneral
@@ -760,12 +772,13 @@ func (p *Parser) Reset() {
 	p.Upgrade = false
 }
 
-// debug专用
+// Status debug专用
 func (p *Parser) Status() string {
 	return stateTab[p.currState]
 }
 
-func (p *Parser) Eof() bool {
+// EOF 表示结束
+func (p *Parser) EOF() bool {
 	if p.hType == REQUEST {
 		return true
 	}
@@ -778,11 +791,10 @@ func (p *Parser) shouldKeepAlive() bool {
 		if p.hasConnectionClose {
 			return false
 		}
-	} else {
 		//TODO
 	}
 
-	return p.Eof()
+	return p.EOF()
 }
 
 func (p *Parser) newMessage() state {

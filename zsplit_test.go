@@ -3,14 +3,15 @@ package httparser
 import (
 	"bytes"
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_ZSplit(t *testing.T) {
 	got := 0
 	need := 2
-	Split([]byte("hello,world"), []byte(","), func(v []byte) error {
+	err := Split([]byte("hello,world"), []byte(","), func(v []byte) error {
 		switch {
 		case bytes.Equal(v, []byte("hello")):
 			got++
@@ -19,6 +20,7 @@ func Test_ZSplit(t *testing.T) {
 		}
 		return nil
 	})
+	assert.NoError(t, err)
 
 	assert.Equal(t, need, got)
 }

@@ -64,7 +64,7 @@ func main() {
 		"MOVE",
 		"MKACTIVITY",
 		"MERGE",
-		"M_SEARCH",
+		"MSEARCH",
 		"MKCALENDAR",
 		"NOTIFY",
 		"PROPFIND",

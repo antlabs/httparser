@@ -27,20 +27,19 @@ type message struct {
 	raw            string
 	statusCode     int
 	responseStatus string
-	requestPath    string
-	requestUrl     string
-	body           string
-	bodySize       string
-	host           string
-	userinfo       string
-	port           uint16
+	//requestPath    string
+	requestURL string
+	body       string
+	//host           string
+	//userinfo string
+	//port     uint16
 	//enum { NONE=0, FIELD, VALUE } last_header_element; //TODO最近移值
 	headers         [][2]string
 	shouldKeepAlive bool
 
-	numChunks         int
-	numChunksComplete int
-	chunkLengths      []int
+	//numChunks         int
+	//numChunksComplete int
+	//chunkLengths      []int
 
 	upgrade string // upgraded body
 
@@ -51,10 +50,10 @@ type message struct {
 	messageBeginCbCalled    bool
 	headersCompleteCbCalled bool
 	messageCompleteCbCalled bool
-	statusCbCalled          bool
-	messageCompleteOnEof    bool
-	bodyIsFinal             int
-	allowChunkedLength      bool
+	//statusCbCalled          bool
+	messageCompleteOnEOF bool
+	//bodyIsFinal             int
+	//allowChunkedLength bool
 }
 
 func (m *message) eq(t *testing.T, m2 *message) bool {
@@ -86,7 +85,7 @@ func (m *message) eq(t *testing.T, m2 *message) bool {
 		return false
 	}
 
-	b = assert.Equal(t, m.requestUrl, m2.requestUrl, "request url")
+	b = assert.Equal(t, m.requestURL, m2.requestURL, "request url")
 	if !b {
 		return false
 	}
@@ -108,7 +107,7 @@ func (m *message) eq(t *testing.T, m2 *message) bool {
 
 	b = assert.Equal(t, m.upgrade, m2.upgrade, "upgrade")
 	if !b {
-		return false
+		return b
 	}
 	return true
 }
@@ -119,12 +118,12 @@ var requests = []message{
 		hType:                   REQUEST,
 		raw:                     "POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nAccept-Encoding : gzip \r\n\r\n",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
 		method:                  POST,
-		requestUrl:              "/echo",
+		requestURL:              "/echo",
 		contentLength:           unused,
 		headers: [][2]string{
 			{"Host", "localhost:8080"},
@@ -137,12 +136,12 @@ var requests = []message{
 		hType:                   REQUEST,
 		raw:                     "POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nContent-Length :  0\r\nAccept-Encoding : gzip \r\n\r\n",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
 		method:                  POST,
-		requestUrl:              "/echo",
+		requestURL:              "/echo",
 		contentLength:           unused,
 		headers: [][2]string{
 			{"Host", "localhost:8080"},
@@ -156,12 +155,12 @@ var requests = []message{
 		hType:                   REQUEST,
 		raw:                     "POST /echo HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close \r\nContent-Length :  5\r\nAccept-Encoding : gzip \r\n\r\nhello",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
 		method:                  POST,
-		requestUrl:              "/echo",
+		requestURL:              "/echo",
 		contentLength:           unused,
 		body:                    "hello",
 		headers: [][2]string{
@@ -176,12 +175,12 @@ var requests = []message{
 		hType:                   REQUEST,
 		raw:                     "POST / HTTP/1.1\r\nHost: localhost:1235\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nAccept-Encoding: gzip\r\n\r\n4\r\nbody\r\n0\r\n\r\n",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
 		method:                  POST,
-		requestUrl:              "/",
+		requestURL:              "/",
 		contentLength:           unused,
 		body:                    "body",
 		headers: [][2]string{
@@ -196,12 +195,12 @@ var requests = []message{
 		hType:                   REQUEST,
 		raw:                     "POST / HTTP/1.1\r\nHost: localhost:1235\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nTrailer: Md5,Size\r\nAccept-Encoding: gzip\r\n\r\n4\r\nbody\r\n0\r\nMd5: 841a2d689ad86bd1611447453c22c6fc\r\nSize: 4\r\n\r\n",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
 		method:                  POST,
-		requestUrl:              "/",
+		requestURL:              "/",
 		contentLength:           unused,
 		body:                    "body",
 		headers: [][2]string{
@@ -223,12 +222,12 @@ var requests = []message{
 			"Accept: */*\r\n" +
 			"\r\n",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
 		method:                  GET,
-		requestUrl:              "/test",
+		requestURL:              "/test",
 		contentLength:           unused,
 		headers: [][2]string{
 			{"User-Agent", "curl/7.18.0 (i486-pc-linux-gnu) libcurl/7.18.0 OpenSSL/0.9.8g zlib/1.2.3.3 libidn/1.1"},
@@ -252,11 +251,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "/favicon.ico",
+		requestURL:           "/favicon.ico",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "0.0.0.0=5000"},
@@ -278,11 +277,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "/dumbluck",
+		requestURL:           "/dumbluck",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"aaaaaaaaaaaaa", "++++++++++"},
@@ -296,11 +295,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "/forums/1/topics/2375?page=1#posts-17408",
+		requestURL:           "/forums/1/topics/2375?page=1#posts-17408",
 		contentLength:        unused,
 	},
 	{
@@ -311,11 +310,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "/get_no_headers_no_body/world",
+		requestURL:           "/get_no_headers_no_body/world",
 		contentLength:        unused,
 	},
 	{
@@ -327,11 +326,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "/get_one_header_no_body",
+		requestURL:           "/get_one_header_no_body",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Accept", "*/*"},
@@ -347,11 +346,11 @@ var requests = []message{
 			"HELLO",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            0,
 		method:               GET,
-		requestUrl:           "/get_funky_content_length_body_hello",
+		requestURL:           "/get_funky_content_length_body_hello",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"conTENT-Length", "5"},
@@ -369,11 +368,11 @@ var requests = []message{
 			"World",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               POST,
-		requestUrl:           "/post_identity_body_world?q=search#hey",
+		requestURL:           "/post_identity_body_world?q=search#hey",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Accept", "*/*"},
@@ -393,11 +392,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               POST,
-		requestUrl:           "/post_chunked_all_your_base",
+		requestURL:           "/post_chunked_all_your_base",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
@@ -417,11 +416,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               POST,
-		requestUrl:           "/two_chunks_mult_zero_end",
+		requestURL:           "/two_chunks_mult_zero_end",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
@@ -443,11 +442,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               POST,
-		requestUrl:           "/chunked_w_trailing_headers",
+		requestURL:           "/chunked_w_trailing_headers",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
@@ -469,11 +468,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               POST,
-		requestUrl:           "/chunked_w_nonsense_after_length",
+		requestURL:           "/chunked_w_nonsense_after_length",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Transfer-Encoding", "chunked"},
@@ -487,11 +486,11 @@ var requests = []message{
 		raw:                     "GET /with_\"stupid\"_quotes?foo=\"bar\" HTTP/1.1\r\n\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "/with_\"stupid\"_quotes?foo=\"bar\"",
+		requestURL:           "/with_\"stupid\"_quotes?foo=\"bar\"",
 		contentLength:        unused,
 	},
 	{
@@ -504,11 +503,11 @@ var requests = []message{
 			"Accept: */*\r\n\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            0,
 		method:               GET,
-		requestUrl:           "/test",
+		requestURL:           "/test",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "0.0.0.0:5000"},
@@ -523,11 +522,11 @@ var requests = []message{
 		raw:                     "GET /test.cgi?foo=bar?baz HTTP/1.1\r\n\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "/test.cgi?foo=bar?baz",
+		requestURL:           "/test.cgi?foo=bar?baz",
 		contentLength:        unused,
 	},
 	/* Some clients, especially after a POST in a keep-alive connection,
@@ -540,11 +539,11 @@ var requests = []message{
 		raw:                     "\r\nGET /test HTTP/1.1\r\n\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "/test",
+		requestURL:           "/test",
 		contentLength:        unused,
 	},
 	{
@@ -563,12 +562,12 @@ var requests = []message{
 			"Hot diggity dogg",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		upgrade:              "Hot diggity dogg",
 		method:               GET,
-		requestUrl:           "/demo",
+		requestURL:           "/demo",
 		contentLength:        unused,
 		headers: [][2]string{{"Host", "example.com"},
 			{"Connection", "Upgrade"},
@@ -591,12 +590,12 @@ var requests = []message{
 			"and yet even more data",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            0,
 		upgrade:              "some data\r\nand yet even more data",
 		method:               CONNECT,
-		requestUrl:           "0-home0.netscape.com:443",
+		requestURL:           "0-home0.netscape.com:443",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"User-agent", "Mozilla/1.1N"},
@@ -611,11 +610,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               REPORT,
-		requestUrl:           "/test",
+		requestURL:           "/test",
 		contentLength:        unused,
 	},
 	/*
@@ -627,11 +626,11 @@ var requests = []message{
 				"\r\n",
 
 			shouldKeepAlive:      true,
-			messageCompleteOnEof: false,
+			messageCompleteOnEOF: false,
 			httpMajor:            0,
 			httpMinor:            9,
 			//method: HTTP_POST,
-			requestUrl:    "/",
+			requestURL:    "/",
 			contentLength: unused,
 		},
 	*/
@@ -646,11 +645,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
-		method:               M_SEARCH,
-		requestUrl:           "*",
+		method:               MSEARCH,
+		requestURL:           "*",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"HOST", "239.255.255.250:1900"},
@@ -680,11 +679,11 @@ var requests = []message{
 				"\r\n",
 
 			shouldKeepAlive:      true,
-			messageCompleteOnEof: false,
+			messageCompleteOnEOF: false,
 			httpMajor:            1,
 			httpMinor:            1,
 			method:               GET,
-			requestUrl:           "/",
+			requestURL:           "/",
 			contentLength:        unused,
 			headers: [][2]string{
 				{"Line1", "abc\tdef ghi\t\tjkl  mno \t \tqrs"},
@@ -703,11 +702,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "http://hypnotoad.org?hail=all",
+		requestURL:           "http://hypnotoad.org?hail=all",
 		contentLength:        unused,
 	},
 	{
@@ -718,11 +717,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "http://hypnotoad.org:1234?hail=all",
+		requestURL:           "http://hypnotoad.org:1234?hail=all",
 		contentLength:        unused,
 	},
 	{
@@ -733,11 +732,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "http://hypnotoad.org:1234",
+		requestURL:           "http://hypnotoad.org:1234",
 		contentLength:        unused,
 	},
 	{
@@ -753,12 +752,12 @@ var requests = []message{
 			"cccccccccc",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		body:                 "cccccccccc",
 		method:               PATCH,
-		requestUrl:           "/file.txt",
+		requestURL:           "/file.txt",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "www.example.com"},
@@ -777,11 +776,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            0,
 		method:               CONNECT,
-		requestUrl:           "HOME0.NETSCAPE.COM:443",
+		requestURL:           "HOME0.NETSCAPE.COM:443",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"User-agent", "Mozilla/1.1N"},
@@ -797,11 +796,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "/δ¶/δt/pope?q=1#narf",
+		requestURL:           "/δ¶/δt/pope?q=1#narf",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "github.com"},
@@ -817,11 +816,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            0,
 		method:               CONNECT,
-		requestUrl:           "home_0.netscape.com:443",
+		requestURL:           "home_0.netscape.com:443",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"User-agent", "Mozilla/1.1N"},
@@ -840,11 +839,11 @@ var requests = []message{
 			"q=42\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               POST,
-		requestUrl:           "/",
+		requestURL:           "/",
 		body:                 "q=42",
 		contentLength:        unused,
 		headers: [][2]string{
@@ -862,11 +861,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               PURGE,
-		requestUrl:           "/file.txt",
+		requestURL:           "/file.txt",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "www.example.com"},
@@ -881,11 +880,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               SEARCH,
-		requestUrl:           "/",
+		requestURL:           "/",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "www.example.com"},
@@ -899,11 +898,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "http://a%12:b!&*$@hypnotoad.org:1234/toto",
+		requestURL:           "http://a%12:b!&*$@hypnotoad.org:1234/toto",
 		contentLength:        unused,
 	},
 	//35
@@ -925,11 +924,11 @@ var requests = []message{
 				"Hot diggity dogg",
 
 			shouldKeepAlive:      true,
-			messageCompleteOnEof: false,
+			messageCompleteOnEOF: false,
 			httpMajor:            1,
 			httpMinor:            1,
 			method:               PATCH,
-			requestUrl:           "/demo",
+			requestURL:           "/demo",
 			contentLength:        unused,
 			upgrade:              "Hot diggity dogg",
 			headers: [][2]string{
@@ -955,11 +954,11 @@ var requests = []message{
 			"Hot diggity dogg",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               GET,
-		requestUrl:           "/demo",
+		requestURL:           "/demo",
 		contentLength:        unused,
 		upgrade:              "Hot diggity dogg",
 		headers: [][2]string{
@@ -980,11 +979,11 @@ var requests = []message{
 				"Hot diggity dogg",
 
 			shouldKeepAlive:      true,
-			messageCompleteOnEof: false,
+			messageCompleteOnEOF: false,
 			httpMajor:            1,
 			httpMinor:            1,
 			method:               PATCH,
-			requestUrl:           "/demo",
+			requestURL:           "/demo",
 			upgrade:              "Hot diggity dogg",
 			headers: [][2]string{
 				{"Connection", "keep-alive,  upgrade"},
@@ -1008,11 +1007,11 @@ var requests = []message{
 			"Hot diggity dogg",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               POST,
-		requestUrl:           "/demo",
+		requestURL:           "/demo",
 		upgrade:              "Hot diggity dogg",
 		body:                 "sweet post body",
 		headers: [][2]string{
@@ -1036,11 +1035,11 @@ var requests = []message{
 			"blarfcicle",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            0,
 		method:               CONNECT,
-		requestUrl:           "foo.bar.com:443",
+		requestURL:           "foo.bar.com:443",
 		contentLength:        unused,
 		upgrade:              "blarfcicle",
 		headers: [][2]string{
@@ -1061,11 +1060,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               LINK,
-		requestUrl:           "/images/my_dog.jpg",
+		requestURL:           "/images/my_dog.jpg",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "example.com"},
@@ -1084,11 +1083,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               UNLINK,
-		requestUrl:           "/images/my_dog.jpg",
+		requestURL:           "/images/my_dog.jpg",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "example.com"},
@@ -1105,11 +1104,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               SOURCE,
-		requestUrl:           "/music/sweet/music",
+		requestURL:           "/music/sweet/music",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "example.com"},
@@ -1125,11 +1124,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            0,
 		method:               SOURCE,
-		requestUrl:           "/music/sweet/music",
+		requestURL:           "/music/sweet/music",
 		contentLength:        unused,
 		headers: [][2]string{
 			{"Host", "example.com"},
@@ -1148,11 +1147,11 @@ var requests = []message{
 			"\r\n",
 
 		shouldKeepAlive:      true,
-		messageCompleteOnEof: false,
+		messageCompleteOnEOF: false,
 		httpMajor:            1,
 		httpMinor:            1,
 		method:               POST,
-		requestUrl:           "/",
+		requestURL:           "/",
 		contentLength:        unused,
 		body:                 "all your base are belong to us",
 		headers: [][2]string{
@@ -1173,11 +1172,11 @@ var requests = []message{
 				"\r\n",
 
 			shouldKeepAlive:      true,
-			messageCompleteOnEof: false,
+			messageCompleteOnEOF: false,
 			httpMajor:            1,
 			httpMinor:            1,
 			method:               POST,
-			requestUrl:           "/",
+			requestURL:           "/",
 			contentLength:        unused,
 			headers: [][2]string{
 				{"Transfer-Encoding", "deflate, chunked"},
@@ -1200,11 +1199,11 @@ var requests = []message{
 				"\r\n",
 
 			shouldKeepAlive:      true,
-			messageCompleteOnEof: false,
+			messageCompleteOnEOF: false,
 			httpMajor:            1,
 			httpMinor:            1,
 			method:               PATCH,
-			requestUrl:           "/chunked_w_content_length",
+			requestURL:           "/chunked_w_content_length",
 			contentLength:        unused,
 			headers: [][2]string{
 				{"Content-Length", "10"},
@@ -1215,7 +1214,7 @@ var requests = []message{
 	*/
 }
 
-var requestsDebug = []message{}
+//var requestsDebug = []message{}
 
 var responses = []message{
 	{
@@ -1240,7 +1239,7 @@ var responses = []message{
 
 		statusCode:              301,
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1285,7 +1284,7 @@ var responses = []message{
 			"</SOAP-ENV:Envelope>",
 		statusCode:              200,
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1315,7 +1314,7 @@ var responses = []message{
 		raw:                     "HTTP/1.1 404 Not Found\r\n\r\n",
 		statusCode:              404,
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1329,7 +1328,7 @@ var responses = []message{
 		raw:                     "HTTP/1.1 301\r\n\r\n",
 		statusCode:              301,
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1354,7 +1353,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1378,7 +1377,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1403,7 +1402,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1428,7 +1427,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1458,7 +1457,7 @@ var responses = []message{
 		statusCode:              301,
 		responseStatus:          "Moved Permanently",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               0,
@@ -1496,7 +1495,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1527,7 +1526,7 @@ var responses = []message{
 		statusCode:              500,
 		responseStatus:          "Oriëntatieprobleem",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1547,7 +1546,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               0,
 		httpMinor:               9,
@@ -1564,7 +1563,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1584,7 +1583,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               0,
@@ -1603,7 +1602,7 @@ var responses = []message{
 		statusCode:              204,
 		responseStatus:          "No content",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               0,
@@ -1621,7 +1620,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1636,7 +1635,7 @@ var responses = []message{
 		statusCode:              204,
 		responseStatus:          "No content",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1652,7 +1651,7 @@ var responses = []message{
 		statusCode:              204,
 		responseStatus:          "No content",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1678,7 +1677,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1716,7 +1715,7 @@ var responses = []message{
 		statusCode:              301,
 		responseStatus:          "MovedPermanently",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1743,7 +1742,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1764,7 +1763,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1787,7 +1786,7 @@ var responses = []message{
 		statusCode:              101,
 		responseStatus:          "Switching Protocols",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1812,7 +1811,7 @@ var responses = []message{
 		statusCode:              101,
 		responseStatus:          "Switching Protocols",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1844,7 +1843,7 @@ var responses = []message{
 		statusCode:              101,
 		responseStatus:          "Switching Protocols",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1869,7 +1868,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1893,7 +1892,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1923,7 +1922,7 @@ var responses = []message{
 		statusCode:              200,
 		responseStatus:          "OK",
 		shouldKeepAlive:         true,
-		messageCompleteOnEof:    false,
+		messageCompleteOnEOF:    false,
 		messageCompleteCbCalled: true,
 		httpMajor:               1,
 		httpMinor:               1,
@@ -1946,7 +1945,7 @@ var settingTest Setting = Setting{
 	},
 	URL: func(p *Parser, url []byte) {
 		m := p.GetUserData().(*message)
-		m.requestUrl += string(url)
+		m.requestURL += string(url)
 	},
 	Status: func(p *Parser, status []byte) {
 		m := p.GetUserData().(*message)
@@ -1983,7 +1982,7 @@ func parse(p *Parser, data string) (int, error) {
 	return p.Execute(&settingTest, []byte(data))
 }
 
-func test_Message(t *testing.T, m *message) {
+func testMessage(t *testing.T, m *message) {
 	for msg1len := 0; msg1len < len(m.raw); msg1len++ {
 		p := New(m.hType)
 		got := &message{}
@@ -2044,17 +2043,17 @@ func Test_Message(t *testing.T) {
 	/*
 		for _, req := range requestsDebug {
 			//for _, req := range requests[len(requests)-1:] {
-			test_Message(t, &req)
+			testMessage(t, &req)
 			_ = req
 		}
 	*/
 	for _, req := range requests {
-		test_Message(t, &req)
+		testMessage(t, &req)
 		_ = req
 	}
 
 	for _, rsp := range responses {
-		test_Message(t, &rsp)
+		testMessage(t, &rsp)
 		_ = rsp
 	}
 }

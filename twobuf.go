@@ -36,29 +36,30 @@ package httparser
 // 溢出(未解析的数据)是概率比较少见，而且溢出的数据不会太长，
 // 重新分配大块内存分配数据有点浪费
 
+// TwoBuf 数据结构
 type TwoBuf struct {
 	buf  []byte
 	mid  int // 中间位置
 	left int
 }
 
-// 新建twobuf, size表明单个块的大小
+// NewTwoBuf 新建twobuf, size表明单个块的大小
 func NewTwoBuf(size int) *TwoBuf {
 	return &TwoBuf{buf: make([]byte, size*2), mid: size, left: size}
 }
 
-// 获取右边buf
+// Right 获取右边buf
 func (t *TwoBuf) Right() []byte {
 	return t.buf[t.mid:]
 }
 
-// 获取全部buf, 如果没有溢出数据，就取右边
+// All 获取全部buf, 如果没有溢出数据，就取右边
 // 如果有溢出数据，就把溢出数据也包含进来
 func (t *TwoBuf) All(right int) []byte {
 	return t.buf[t.left : t.mid+right]
 }
 
-// 移动到左边buf
+// MoveLeft 移动到左边buf
 // 如果写入数据超过left空间，会直接panic
 func (t *TwoBuf) MoveLeft(leftBuf []byte) {
 	t.left = t.mid - len(leftBuf)
@@ -69,6 +70,7 @@ func (t *TwoBuf) MoveLeft(leftBuf []byte) {
 	copy(t.buf[t.left:], leftBuf)
 }
 
+// Reset 重置
 func (t *TwoBuf) Reset() {
 	t.left = t.mid
 }
