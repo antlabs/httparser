@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_ZSplit(t *testing.T) {
@@ -20,14 +18,21 @@ func Test_ZSplit(t *testing.T) {
 		}
 		return nil
 	})
-	assert.NoError(t, err)
+	if err != nil {
+		t.Error(err)
+	}
 
-	assert.Equal(t, need, got)
+	if got != need {
+		t.Errorf("got %d, need %d", got, need)
+	}
 }
 
 func Test_ZSplit_Error(t *testing.T) {
 	err := Split([]byte("hello,world"), []byte(","), func(v []byte) error {
 		return errors.New("fail")
 	})
-	assert.Error(t, err)
+
+	if err == nil {
+		t.Error("err should not be nil")
+	}
 }

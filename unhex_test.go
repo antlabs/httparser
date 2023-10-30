@@ -1,10 +1,7 @@
 package httparser
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_Unhex(t *testing.T) {
@@ -12,13 +9,23 @@ func Test_Unhex(t *testing.T) {
 		v := unhex[i]
 		switch {
 		case i >= '0' && i <= '9':
-			assert.Equal(t, v, int8(i-'0'))
+			if i-'0' != int(v) {
+				t.Fatalf("fail:%c", i)
+			}
 		case i >= 'a' && i <= 'f':
-			assert.Equal(t, v, int8(i-'a'+10))
+			if i-'a'+10 != int(v) {
+				t.Fatalf("fail:%c", i)
+			}
+
 		case i >= 'A' && i <= 'F':
-			assert.Equal(t, v, int8(i-'A'+10))
+			if i-'A'+10 != int(v) {
+				t.Fatalf("fail:%c", i)
+			}
 		default:
-			assert.Equal(t, v, int8(-1), fmt.Sprintf("fail:%c", i))
+			if v != -1 {
+				t.Fatalf("fail:%c", i)
+			}
+
 		}
 	}
 }

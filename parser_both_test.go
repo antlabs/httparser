@@ -1,6 +1,7 @@
 package httparser
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +11,7 @@ import (
 func Test_ParserResponse_RequestBody_BOTH(t *testing.T) {
 	p := New(BOTH)
 
-	var data = []byte(
+	data := []byte(
 		"POST /joyent/http-parser HTTP/1.1\r\n" +
 			"Host: github.com\r\n" +
 			"DNT: 1\r\n" +
@@ -36,7 +37,7 @@ func Test_ParserResponse_RequestBody_BOTH(t *testing.T) {
 	var value []byte
 
 	body2 := "hello world"
-	var value2 = "github.com" +
+	value2 := "github.com" +
 		"1" +
 		"gzip, deflate, sdch" +
 		"ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4" +
@@ -49,7 +50,7 @@ func Test_ParserResponse_RequestBody_BOTH(t *testing.T) {
 		"keep-alive" +
 		"chunked" +
 		"max-age=0"
-	var field2 = []byte(
+	field2 := []byte(
 		"Host" +
 			"DNT" +
 			"Accept-Encoding" +
@@ -61,7 +62,7 @@ func Test_ParserResponse_RequestBody_BOTH(t *testing.T) {
 			"Transfer-Encoding" +
 			"Cache-Control")
 
-	var setting = Setting{
+	setting := Setting{
 		MessageBegin: func(*Parser) {
 			messageBegin = true
 		},
@@ -89,18 +90,28 @@ func Test_ParserResponse_RequestBody_BOTH(t *testing.T) {
 	}
 
 	i, err := p.Execute(&setting, data)
-	assert.NoError(t, err)
-	assert.Equal(t, url, []byte("/joyent/http-parser")) //url
-	assert.Equal(t, i, len(data))                       //总数据长度
-	assert.Equal(t, field, field2)                      //header field
-	assert.Equal(t, string(value), value2)              //header field
-	assert.Equal(t, string(body), body2)                //chunked body
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(url, []byte("/joyent/http-parser")) {
+		t.Fatal("url error")
+	}
+
+	if i != len(data) {
+		t.Fatal("data length error")
+	}
+
+	assert.Equal(t, i, len(data))          // 总数据长度
+	assert.Equal(t, field, field2)         // header field
+	assert.Equal(t, string(value), value2) // header field
+	assert.Equal(t, string(body), body2)   // chunked body
 	assert.True(t, messageBegin)
 	assert.True(t, messageComplete)
 	assert.True(t, headersComplete)
 	assert.True(t, p.EOF())
 
-	//fmt.Printf("##:%s", stateTab[p.currState])
+	// fmt.Printf("##:%s", stateTab[p.currState])
 }
 
 func Test_ParserResponse_Chunked_Both(t *testing.T) {
@@ -108,16 +119,16 @@ func Test_ParserResponse_Chunked_Both(t *testing.T) {
 
 	messageBegin := false
 	rcvBuf := []byte{}
-	setting := &Setting{Status: func(p *Parser, buf []byte) {
-		assert.Equal(t, buf, []byte("OK"))
-	}, MessageBegin: func(p *Parser) {
-		messageBegin = true
-	}, HeaderField: func(p *Parser, buf []byte) {
-
-	}, HeaderValue: func(p *Parser, buf []byte) {
-	}, Body: func(p *Parser, buf []byte) {
-		rcvBuf = append(rcvBuf, buf...)
-	},
+	setting := &Setting{
+		Status: func(p *Parser, buf []byte) {
+			assert.Equal(t, buf, []byte("OK"))
+		}, MessageBegin: func(p *Parser) {
+			messageBegin = true
+		}, HeaderField: func(p *Parser, buf []byte) {
+		}, HeaderValue: func(p *Parser, buf []byte) {
+		}, Body: func(p *Parser, buf []byte) {
+			rcvBuf = append(rcvBuf, buf...)
+		},
 	}
 
 	var rsp [3]string
