@@ -4,8 +4,6 @@ import (
 	"io"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_Twobuf(t *testing.T) {
@@ -31,10 +29,16 @@ func Test_Twobuf(t *testing.T) {
 			if i >= 2 {
 				start := i * blockSize
 
-				assert.Equal(t, string(tb.All(n)), v[start-offset:min(int32(start+blockSize), int32(len(v)))])
+				if string(tb.All(n)) != v[start-offset:min(int32(start+blockSize), int32(len(v)))] {
+					t.Error("not equal")
+				}
+				// assert.Equal(t, string(tb.All(n)), v[start-offset:min(int32(start+blockSize), int32(len(v)))])
 			} else {
 				start := i * blockSize
-				assert.Equal(t, string(tb.All(n)), v[start:min(int32(start+blockSize), int32(len(v)))])
+				if string(tb.All(n)) != v[start:min(int32(start+blockSize), int32(len(v)))] {
+					t.Error("not equal")
+				}
+				// assert.Equal(t, string(tb.All(n)), v[start:min(int32(start+blockSize), int32(len(v)))])
 			}
 
 			if i != 0 {
@@ -47,8 +51,11 @@ func Test_Twobuf(t *testing.T) {
 }
 
 func Test_TwobufPanic(t *testing.T) {
-	assert.Panics(t, func() {
-		tb := NewTwoBuf(4)
-		tb.MoveLeft([]byte("12345"))
-	})
+	defer func() {
+		if err := recover(); err == nil {
+			t.Error("should panic")
+		}
+	}()
+	tb := NewTwoBuf(4)
+	tb.MoveLeft([]byte("12345"))
 }
