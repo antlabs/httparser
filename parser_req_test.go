@@ -225,7 +225,7 @@ func Test_ParserResponse_RequestBody2(t *testing.T) {
 	//fmt.Printf("##:%s", stateTab[p.currState])
 }
 
-//https://github.com/antlabs/httparser/issues/1
+// https://github.com/antlabs/httparser/issues/1
 func Test_ParserRequest_chunked_segment(t *testing.T) {
 	var data = []byte(
 		"POST /joyent/http-parser HTTP/1.1\r\n" +

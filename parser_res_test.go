@@ -1,6 +1,7 @@
 package httparser
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,17 +14,28 @@ func Test_ParserResponse_StatusLine(t *testing.T) {
 
 	messageBegin := false
 	rsp := []byte("HTTP/1.1   200   OK\r\n")
-	_, err := p.Execute(&Setting{Status: func(_ *Parser, buf []byte) {
-		assert.Equal(t, buf, []byte("OK"))
-	}, MessageBegin: func(*Parser) {
-		messageBegin = true
-	},
+	_, err := p.Execute(&Setting{
+		Status: func(_ *Parser, buf []byte) {
+			assert.Equal(t, buf, []byte("OK"))
+		}, MessageBegin: func(*Parser) {
+			messageBegin = true
+		},
 	}, rsp)
+	if err != nil {
+		t.Error(err)
+	}
 
-	assert.NoError(t, err)
-	assert.Equal(t, p.Major, uint8(1))
-	assert.Equal(t, p.Minor, uint8(1))
-	assert.True(t, messageBegin)
+	if p.Major != 1 {
+		t.Errorf("major is %d, expect 1", p.Major)
+	}
+
+	if p.Minor != 1 {
+		t.Errorf("minor is %d, expect 1", p.Minor)
+	}
+
+	if !messageBegin {
+		t.Error("message begin is false, expect true")
+	}
 }
 
 // 测试解析http header
@@ -33,19 +45,28 @@ func Test_ParserResponse_HeaderField(t *testing.T) {
 	messageBegin := false
 	rsp := []byte("HTTP/1.1   200   OK\r\n" +
 		"Connection: close\r\n\r\n")
-	_, err := p.Execute(&Setting{Status: func(_ *Parser, buf []byte) {
-		assert.Equal(t, buf, []byte("OK"))
-	}, MessageBegin: func(*Parser) {
-		messageBegin = true
-	}, HeaderField: func(_ *Parser, buf []byte) {
-		assert.Equal(t, buf, []byte("Connection"))
-	},
+	_, err := p.Execute(&Setting{
+		Status: func(_ *Parser, buf []byte) {
+			assert.Equal(t, buf, []byte("OK"))
+		}, MessageBegin: func(*Parser) {
+			messageBegin = true
+		}, HeaderField: func(_ *Parser, buf []byte) {
+			assert.Equal(t, buf, []byte("Connection"))
+		},
 	}, rsp)
+	if err != nil {
+		t.Error(err)
+	}
 
-	assert.NoError(t, err)
-	assert.Equal(t, p.Major, uint8(1))
-	assert.Equal(t, p.Minor, uint8(1))
-	assert.True(t, messageBegin)
+	if p.Major != 1 {
+		t.Errorf("major is %d, expect 1", p.Major)
+	}
+	if p.Minor != 1 {
+		t.Errorf("minor is %d, expect 1", p.Minor)
+	}
+	if !messageBegin {
+		t.Error("message begin is false, expect true")
+	}
 }
 
 // 测试解析http header 和 http value
@@ -55,21 +76,30 @@ func Test_ParserResponse_HeaderValue(t *testing.T) {
 	messageBegin := false
 	rsp := []byte("HTTP/1.1   200   OK\r\n" +
 		"Connection: close\r\n\r\n")
-	_, err := p.Execute(&Setting{Status: func(_ *Parser, buf []byte) {
-		assert.Equal(t, buf, []byte("OK"))
-	}, MessageBegin: func(*Parser) {
-		messageBegin = true
-	}, HeaderField: func(_ *Parser, buf []byte) {
-		assert.Equal(t, string(buf), "Connection")
-	}, HeaderValue: func(_ *Parser, buf []byte) {
-		assert.Equal(t, string(buf), "close")
-	},
+	_, err := p.Execute(&Setting{
+		Status: func(_ *Parser, buf []byte) {
+			assert.Equal(t, buf, []byte("OK"))
+		}, MessageBegin: func(*Parser) {
+			messageBegin = true
+		}, HeaderField: func(_ *Parser, buf []byte) {
+			assert.Equal(t, string(buf), "Connection")
+		}, HeaderValue: func(_ *Parser, buf []byte) {
+			assert.Equal(t, string(buf), "close")
+		},
 	}, rsp)
+	if err != nil {
+		t.Error(err)
+	}
 
-	assert.NoError(t, err)
-	assert.Equal(t, p.Major, uint8(1))
-	assert.Equal(t, p.Minor, uint8(1))
-	assert.True(t, messageBegin)
+	if p.Major != 1 {
+		t.Errorf("major is %d, expect 1", p.Major)
+	}
+	if p.Minor != 1 {
+		t.Errorf("minor is %d, expect 1", p.Minor)
+	}
+	if !messageBegin {
+		t.Error("message begin is false, expect true")
+	}
 }
 
 // 测试解析多个http header 和 http value。
@@ -83,42 +113,56 @@ func Test_ParserResponse_Multiple_HeaderValue(t *testing.T) {
 	rsp := []byte("HTTP/1.1   200   OK\r\n" +
 		"Content-Length: 10\r\n" +
 		"Connection: close\r\n\r\n")
-	_, err := p.Execute(&Setting{Status: func(_ *Parser, buf []byte) {
-		assert.Equal(t, buf, []byte("OK"))
-	}, MessageBegin: func(*Parser) {
-		messageBegin = true
-	}, HeaderField: func(_ *Parser, buf []byte) {
-		field = append(field, string(buf))
-	}, HeaderValue: func(_ *Parser, buf []byte) {
-		fieldValue = append(fieldValue, string(buf))
-	},
+	_, err := p.Execute(&Setting{
+		Status: func(_ *Parser, buf []byte) {
+			assert.Equal(t, buf, []byte("OK"))
+		}, MessageBegin: func(*Parser) {
+			messageBegin = true
+		}, HeaderField: func(_ *Parser, buf []byte) {
+			field = append(field, string(buf))
+		}, HeaderValue: func(_ *Parser, buf []byte) {
+			fieldValue = append(fieldValue, string(buf))
+		},
 	}, rsp)
+	if err != nil {
+		t.Error(err)
+	}
 
-	assert.NoError(t, err)
-	assert.Equal(t, p.Major, uint8(1))
-	assert.Equal(t, p.Minor, uint8(1))
-	assert.Equal(t, field, []string{"Content-Length", "Connection"})
-	assert.Equal(t, fieldValue, []string{"10", "close"})
-	assert.True(t, messageBegin)
+	if p.Major != 1 {
+		t.Errorf("major is %d, expect 1", p.Major)
+	}
+	if p.Minor != 1 {
+		t.Errorf("minor is %d, expect 1", p.Minor)
+	}
+	if !messageBegin {
+		t.Error("message begin is false, expect true")
+	}
+
+	if !reflect.DeepEqual(field, []string{"Content-Length", "Connection"}) {
+		t.Errorf("field is %v, expect [Content-Length, Connection]", field)
+	}
+
+	if !reflect.DeepEqual(fieldValue, []string{"10", "close"}) {
+		t.Errorf("fieldvalue is %v, expect [10, close]", fieldValue)
+	}
 }
 
 // 测试解析Content-Length body数据
 func Test_ParserResponse_Content_Length_Body(t *testing.T) {
-
 	p := New(RESPONSE)
 
 	messageBegin := false
 	rcvBuf := []byte{}
-	setting := &Setting{Status: func(_ *Parser, buf []byte) {
-		assert.Equal(t, buf, []byte("OK"))
-	}, MessageBegin: func(_ *Parser) {
-		messageBegin = true
-	}, HeaderField: func(_ *Parser, buf []byte) {
-
-	}, HeaderValue: func(_ *Parser, buf []byte) {
-	}, Body: func(_ *Parser, buf []byte) {
-		rcvBuf = append(rcvBuf, buf...)
-	},
+	setting := &Setting{
+		Status: func(_ *Parser, buf []byte) {
+			assert.Equal(t, buf, []byte("OK"))
+		}, MessageBegin: func(_ *Parser) {
+			messageBegin = true
+		}, HeaderField: func(_ *Parser, buf []byte) {
+		}, HeaderValue: func(_ *Parser, buf []byte) {
+		}, Body: func(_ *Parser, buf []byte) {
+			rcvBuf = append(rcvBuf, buf...)
+		},
 	}
 
 	var rsp [3][]byte
@@ -148,16 +192,16 @@ func Test_ParserResponse_Chunked(t *testing.T) {
 
 	messageBegin := false
 	rcvBuf := []byte{}
-	setting := &Setting{Status: func(_ *Parser, buf []byte) {
-		assert.Equal(t, buf, []byte("OK"))
-	}, MessageBegin: func(_ *Parser) {
-		messageBegin = true
-	}, HeaderField: func(_ *Parser, buf []byte) {
-
-	}, HeaderValue: func(_ *Parser, buf []byte) {
-	}, Body: func(_ *Parser, buf []byte) {
-		rcvBuf = append(rcvBuf, buf...)
-	},
+	setting := &Setting{
+		Status: func(_ *Parser, buf []byte) {
+			assert.Equal(t, buf, []byte("OK"))
+		}, MessageBegin: func(_ *Parser) {
+			messageBegin = true
+		}, HeaderField: func(_ *Parser, buf []byte) {
+		}, HeaderValue: func(_ *Parser, buf []byte) {
+		}, Body: func(_ *Parser, buf []byte) {
+			rcvBuf = append(rcvBuf, buf...)
+		},
 	}
 
 	var rsp [3]string
