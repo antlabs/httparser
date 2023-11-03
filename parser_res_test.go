@@ -1,6 +1,7 @@
 package httparser
 
 import (
+	"bytes"
 	"reflect"
 	"testing"
 
@@ -181,10 +182,21 @@ func Test_ParserResponse_Content_Length_Body(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, rcvBuf, append(rsp[1], rsp[2]...))
-	assert.Equal(t, p.Major, uint8(1))
-	assert.Equal(t, p.Minor, uint8(1))
-	assert.True(t, messageBegin)
+	if !bytes.Equal(rcvBuf, append(rsp[1], rsp[2]...)) {
+		t.Errorf("rcvBuf is %v, expect %v", rcvBuf, append(rsp[1], rsp[2]...))
+	}
+
+	if p.Major != 1 {
+		t.Errorf("major is %d, expect 1", p.Major)
+	}
+
+	if p.Minor != 1 {
+		t.Errorf("minor is %d, expect 1", p.Minor)
+	}
+
+	if !messageBegin {
+		t.Error("message begin is false, expect true")
+	}
 }
 
 func Test_ParserResponse_Chunked(t *testing.T) {
@@ -232,10 +244,26 @@ func Test_ParserResponse_Chunked(t *testing.T) {
 		sentTotal += len(buf)
 	}
 
-	assert.Equal(t, rcvBuf, []byte("MozillaDeveloperNetworknew year"))
-	assert.Equal(t, p.Major, uint8(1))
-	assert.Equal(t, p.Minor, uint8(1))
-	assert.True(t, messageBegin)
-	assert.Equal(t, sentTotal, parserTotal)
-	assert.True(t, p.EOF())
+	if !bytes.Equal(rcvBuf, []byte("MozillaDeveloperNetworknew year")) {
+		t.Errorf("rcvBuf is %v, expect %v", rcvBuf, []byte("MozillaDeveloperNetworknew year"))
+	}
+
+	if p.Major != 1 {
+		t.Errorf("major is %d, expect 1", p.Major)
+	}
+
+	if p.Minor != 1 {
+		t.Errorf("minor is %d, expect 1", p.Minor)
+	}
+	if !messageBegin {
+		t.Error("message begin is false, expect true")
+	}
+
+	if sentTotal != parserTotal {
+		t.Errorf("sentTotal is %d, parserTotal is %d", sentTotal, parserTotal)
+	}
+
+	if !p.EOF() {
+		t.Error("EOF is true, expect false")
+	}
 }
