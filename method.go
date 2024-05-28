@@ -73,3 +73,78 @@ const (
 	// UNLINK 表示UNLINK方法
 	UNLINK
 )
+
+func (m Method) String() string {
+	switch m {
+	case GET:
+		return "GET"
+	case HEAD:
+		return "HEAD"
+	case POST:
+		return "POST"
+	case PUT:
+		return "PUT"
+	case DELETE:
+		return "DELETE"
+	case CONNECT:
+		return "CONNECT"
+	case OPTIONS:
+		return "OPTIONS"
+	case TRACE:
+		return "TRACE"
+	case ACL:
+		return "ACL"
+	case BIND:
+		return "BIND"
+	case COPY:
+		return "COPY"
+	case CHECKOUT:
+		return "CHECKOUT"
+	case LOCK:
+		return "LOCK"
+	case UNLOCK:
+		return "UNLOCK"
+	case LINK:
+		return "LINK"
+	case MKCOL:
+		return "MKCOL"
+	case MOVE:
+		return "MOVE"
+	case MKACTIVITY:
+		return "MKACTIVITY"
+	case MERGE:
+		return "MERGE"
+	case MSEARCH:
+		return "M-SEARCH"
+	case MKCALENDAR:
+		return "MKCALENDAR"
+	case NOTIFY:
+		return "NOTIFY"
+	case PROPFIND:
+		return "PROPFIND"
+	case PROPPATCH:
+		return "PROPPATCH"
+	case PATCH:
+		return "PATCH"
+	case PURGE:
+		return "PURGE"
+	case REPORT:
+		return "REPORT"
+	case REBIND:
+		return "REBIND"
+	case SUBSCRIBE:
+		return "SUBSCRIBE"
+	case SEARCH:
+		return "SEARCH"
+	case SOURCE:
+		return "SOURCE"
+	case UNSUBSCRIBE:
+		return "UNSUBSCRIBE"
+	case UNBIND:
+		return "UNBIND"
+	case UNLINK:
+		return "UNLINK"
+	default:
+		return "UNKNOWN"
+	}
+}
