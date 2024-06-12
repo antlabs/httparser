@@ -621,7 +621,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			if p.hasContentLength {
 				nread := min(int32(len(buf[i:])), p.contentLength)
 				if setting.Body != nil && nread > 0 {
-					setting.Body(p, buf[i:int32(i)+nread], i)
+					setting.Body(p, buf[i:int32(i)+nread], i+int(nread))
 				}
 
 				p.contentLength -= nread
@@ -640,7 +640,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 		case bodyIdentityEOF:
 			if setting.Body != nil {
-				setting.Body(p, buf[i:], i)
+				setting.Body(p, buf[i:], i+len(buf[i:]))
 				i = len(buf) - 1
 			}
 
@@ -693,7 +693,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 		case chunkedData:
 			nread := min(int32(len(buf[i:])), p.contentLength)
 			if setting.Body != nil && nread > 0 {
-				setting.Body(p, buf[chunkDataStartIndex:int32(chunkDataStartIndex)+nread], i)
+				setting.Body(p, buf[chunkDataStartIndex:int32(chunkDataStartIndex)+nread], chunkDataStartIndex+int(nread))
 			}
 
 			p.contentLength -= nread
