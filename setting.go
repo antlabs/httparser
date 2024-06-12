@@ -17,23 +17,23 @@ package httparser
 // Setting 查阅#6 看设计变更原因
 type Setting struct {
 	// 解析开始
-	MessageBegin func(*Parser)
+	MessageBegin func(*Parser, int)
 	// url 回调函数, 只有在request包才会回调
 	// 解析一个包时,URL回调可能会多次调用
-	URL func(*Parser, []byte)
+	URL func(*Parser, []byte, int)
 	// 状态短语
 	// 解析一个包时, Status回调可能会多次调用
-	Status func(*Parser, []byte)
+	Status func(*Parser, []byte, int)
 	// http field 回调函数
-	HeaderField func(*Parser, []byte)
+	HeaderField func(*Parser, []byte, int)
 	// http value 回调函数
-	HeaderValue func(*Parser, []byte)
+	HeaderValue func(*Parser, []byte, int)
 	// http 解析完成之后的回调函数
-	HeadersComplete func(*Parser)
+	HeadersComplete func(*Parser, int)
 	// body的回调函数
-	Body func(*Parser, []byte)
+	Body func(*Parser, []byte, int)
 	// 所有消息成功解析
-	MessageComplete func(*Parser)
+	MessageComplete func(*Parser, int)
 }
 
 // ReqOrRsp 请求还是响应

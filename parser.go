@@ -111,10 +111,10 @@ func (p *Parser) ReadyUpgradeData() bool {
 	return p.callMessageComplete && p.Upgrade
 }
 
-func (p *Parser) complete(s *Setting) {
+func (p *Parser) complete(s *Setting, pos int) {
 	p.callMessageComplete = true
 	if s.MessageComplete != nil {
-		s.MessageComplete(p)
+		s.MessageComplete(p, pos)
 	}
 }
 
@@ -179,7 +179,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 	if len(buf) == 0 {
 		switch currState {
 		case bodyIdentityEOF:
-			p.complete(setting)
+			p.complete(setting, i)
 			return 0, nil
 		default:
 			return 0, nil
@@ -189,7 +189,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 	for ; i < len(buf); i++ {
 		c = buf[i]
 
-		//fmt.Printf("---->debug state(%s):(%s)method(%#v)\n", currState, buf[i:], p.Method)
+		// fmt.Printf("---->debug state(%s):(%s)method(%#v)\n", currState, buf[i:], p.Method)
 	reExec:
 		switch currState {
 		case startReqOrRsp:
@@ -199,7 +199,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			if c == 'H' {
 				if setting.MessageBegin != nil {
-					setting.MessageBegin(p)
+					setting.MessageBegin(p, i)
 				}
 				currState = rspHTTP
 				continue
@@ -218,7 +218,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			if setting.MessageBegin != nil {
-				setting.MessageBegin(p)
+				setting.MessageBegin(p, i)
 			}
 
 			buf2 := buf[i : i+pos]
@@ -309,7 +309,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			if c == ' ' || c == '\t' {
 				currState = reqURLAfterSP
 				if setting.URL != nil {
-					setting.URL(p, buf[urlStartIndex:i])
+					setting.URL(p, buf[urlStartIndex:i], i)
 				}
 			}
 
@@ -346,7 +346,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			}
 
 			if setting.MessageBegin != nil {
-				setting.MessageBegin(p)
+				setting.MessageBegin(p, i)
 			}
 
 			currState = rspHTTP
@@ -410,7 +410,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			if c == '\r' {
 				if setting.Status != nil {
-					setting.Status(p, buf[reasonPhraseIndex:i])
+					setting.Status(p, buf[reasonPhraseIndex:i], i)
 				}
 				currState = rspStatusAfterSP
 				continue
@@ -418,7 +418,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			if c == '\n' {
 				if setting.Status != nil {
-					setting.Status(p, buf[reasonPhraseIndex:i])
+					setting.Status(p, buf[reasonPhraseIndex:i], i)
 				}
 				currState = headerField
 			}
@@ -450,7 +450,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			field := buf[i : i+pos]
 			if setting.HeaderField != nil {
-				setting.HeaderField(p, field)
+				setting.HeaderField(p, field, i+pos)
 			}
 
 			field = bytes.TrimRight(field, " ")
@@ -500,7 +500,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			hValue := buf[i : i+end]
 			if setting.HeaderValue != nil {
-				setting.HeaderValue(p, hValue)
+				setting.HeaderValue(p, hValue, i+end)
 			}
 
 			err2 := Split(hValue, bytesCommaSep, func(hValue []byte) error {
@@ -576,28 +576,28 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 			//fmt.Printf("p.Upgrade:%t, hasBody:%t, hasTrailing:%t\n", p.Upgrade, hasBody, p.hasTrailing)
 			if p.Upgrade && !hasBody || p.Method == CONNECT {
-				p.complete(setting)
+				p.complete(setting, i)
 
 				p.currState = p.newMessage()
 				return i + 1, nil
 			}
 
 			if p.hasTrailing {
-				p.complete(setting)
+				p.complete(setting, i)
 
 				currState = messageDone
 				goto reExec
 			}
 
 			if setting.HeadersComplete != nil {
-				setting.HeadersComplete(p)
+				setting.HeadersComplete(p, i)
 			}
 
 			// TODO hasContentLength, hasTransferEncoding同时为true
 			if p.hasContentLength {
 				// 如果contentLength 等于0，说明body的内容为空，可以直接退出
 				if p.contentLength == 0 {
-					p.complete(setting)
+					p.complete(setting, i)
 					return i, nil
 				}
 				currState = httpBody
@@ -612,7 +612,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			if p.EOF() {
 				currState = messageDone
 
-				p.complete(setting)
+				p.complete(setting, i)
 				continue
 			}
 			//一直读到socket eof
@@ -621,7 +621,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 			if p.hasContentLength {
 				nread := min(int32(len(buf[i:])), p.contentLength)
 				if setting.Body != nil && nread > 0 {
-					setting.Body(p, buf[i:int32(i)+nread])
+					setting.Body(p, buf[i:int32(i)+nread], i)
 				}
 
 				p.contentLength -= nread
@@ -634,13 +634,13 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 
 				// httpBody没有后继结点,所以这里发现数据消费完, 调用下MessageComplete方法
 				if p.contentLength == 0 {
-					p.complete(setting)
+					p.complete(setting, i)
 				}
 			}
 
 		case bodyIdentityEOF:
 			if setting.Body != nil {
-				setting.Body(p, buf[i:])
+				setting.Body(p, buf[i:], i)
 				i = len(buf) - 1
 			}
 
@@ -693,7 +693,7 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 		case chunkedData:
 			nread := min(int32(len(buf[i:])), p.contentLength)
 			if setting.Body != nil && nread > 0 {
-				setting.Body(p, buf[chunkDataStartIndex:int32(chunkDataStartIndex)+nread])
+				setting.Body(p, buf[chunkDataStartIndex:int32(chunkDataStartIndex)+nread], i)
 			}
 
 			p.contentLength -= nread
@@ -728,12 +728,12 @@ func (p *Parser) Execute(setting *Setting, buf []byte) (success int, err error) 
 	switch currState {
 	case reqURL:
 		if setting.URL != nil && len(buf[urlStartIndex:]) > 0 {
-			setting.URL(p, buf[urlStartIndex:])
+			setting.URL(p, buf[urlStartIndex:], len(buf))
 		}
 
 	case rspStatus:
 		if setting.Status != nil && len(buf[reasonPhraseIndex:]) > 0 {
-			setting.Status(p, buf[reasonPhraseIndex:])
+			setting.Status(p, buf[reasonPhraseIndex:], len(buf))
 		}
 	}
 
