@@ -15,9 +15,8 @@
 package httparser
 
 import (
+	"reflect"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 type message struct {
@@ -57,57 +56,60 @@ type message struct {
 }
 
 func (m *message) eq(t *testing.T, m2 *message) bool {
-	b := assert.Equal(t, m.messageCompleteCbCalled, m2.messageCompleteCbCalled, "messageCompleteCbCalled")
-	if !b {
+	if m.messageCompleteCbCalled != m2.messageCompleteCbCalled {
+		t.Errorf("messageCompleteCbCalled: %v != %v", m.messageCompleteCbCalled, m2.messageCompleteCbCalled)
 		return false
 	}
 
-	b = assert.Equal(t, m.method, m2.method, "method")
-	if !b {
+	if m.method != m2.method {
+		t.Errorf("method: %v != %v", m.method, m2.method)
 		return false
 	}
 
-	b = assert.Equal(t, m.headers, m2.headers)
-	if !b {
+	if !reflect.DeepEqual(m.headers, m2.headers) {
+		t.Errorf("headers: %v\n", m.headers)
+		t.Errorf("headers: %v\n", m2.headers)
 		return false
 	}
 
-	b = assert.Equal(t, m.httpMajor, m2.httpMajor, "major")
-	if !b {
+	if m.httpMajor != m2.httpMajor {
+		t.Errorf("httpMajor: %v != %v", m.httpMajor, m2.httpMajor)
 		return false
 	}
-	b = assert.Equal(t, m.httpMinor, m2.httpMinor, "minor")
-	if !b {
-		return false
-	}
-	b = assert.Equal(t, m.hType, m2.hType, "htype")
-	if !b {
+	if m.httpMinor != m2.httpMinor {
+		t.Errorf("httpMinor: %v != %v", m.httpMinor, m2.httpMinor)
 		return false
 	}
 
-	b = assert.Equal(t, m.requestURL, m2.requestURL, "request url")
-	if !b {
+	if m.hType != m2.hType {
+		t.Errorf("hType: %v != %v", m.hType, m2.hType)
 		return false
 	}
 
-	b = assert.Equal(t, m.body, m2.body, "body")
-	if !b {
+	if m.requestURL != m2.requestURL {
+		t.Errorf("requestURL: %v != %v", m.requestURL, m2.requestURL)
 		return false
 	}
 
-	b = assert.Equal(t, m.responseStatus, m2.responseStatus, "responseStatus")
-	if !b {
+	if m.body != m2.body {
+		t.Errorf("body: %v != %v", m.body, m2.body)
 		return false
 	}
 
-	b = assert.Equal(t, m.statusCode, m2.statusCode, "status code")
-	if !b {
+	if m.responseStatus != m2.responseStatus {
+		t.Errorf("responseStatus: %v != %v", m.responseStatus, m2.responseStatus)
 		return false
 	}
 
-	b = assert.Equal(t, m.upgrade, m2.upgrade, "upgrade")
-	if !b {
-		return b
+	if m.statusCode != m2.statusCode {
+		t.Errorf("statusCode: %v != %v", m.statusCode, m2.statusCode)
+		return false
+
+	}
+
+	if m.upgrade != m2.upgrade {
+		t.Errorf("upgrade: %v != %v", m.upgrade, m2.upgrade)
+		return false
 	}
 	return true
 }
@@ -2002,7 +2004,10 @@ func testMessage(t *testing.T, m *message) {
 		// 模拟第1次读包
 		if msg1len > 0 {
 			n1, err1 = parse(p, msg1Message)
-			assert.NoError(t, err1)
+			if err1 != nil {
+				t.Errorf("msg1len:%d, msg1(%s)", msg1len, msg1Message)
+				return
+			}
 			// 如果有upgrade状态, 就不需要再重复送往数据
 			if p.ReadyUpgradeData() {
 				//if p.callMessageComplete && p.Upgrade {
@@ -2021,13 +2026,19 @@ func testMessage(t *testing.T, m *message) {
 			got.upgrade += data[n2:]
 			goto test
 		}
-		assert.NoError(t, err)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
 	test:
 
 		// flush 解析器
 		_, err = parse(p, "")
-		assert.NoError(t, err)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 		if b := m.eq(t, got); !b {
 			t.Logf("msg1.len:%d, msg2.len:%d, test case name:%s\n", len(msg1Message), len(msg2Message), m.name)
 			t.Logf("msg1len:%d,  msg1(%s)", msg1len, msg1Message)

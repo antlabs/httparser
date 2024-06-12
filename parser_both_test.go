@@ -3,8 +3,6 @@ package httparser
 import (
 	"bytes"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 // 测试请求body
@@ -102,14 +100,44 @@ func Test_ParserResponse_RequestBody_BOTH(t *testing.T) {
 		t.Fatal("data length error")
 	}
 
-	assert.Equal(t, i, len(data))          // 总数据长度
-	assert.Equal(t, field, field2)         // header field
-	assert.Equal(t, string(value), value2) // header field
-	assert.Equal(t, string(body), body2)   // chunked body
-	assert.True(t, messageBegin)
-	assert.True(t, messageComplete)
-	assert.True(t, headersComplete)
-	assert.True(t, p.EOF())
+	// 总数据长度
+	if i != len(data) {
+		t.Errorf("i(%d) != len(data)(%d)\n", i, len(data))
+		return
+	}
+
+	if !bytes.Equal(field, field2) {
+		t.Errorf("field error: %s\n", field)
+		return
+	}
+	if string(value) != value2 {
+		t.Errorf("value error: %s\n", value)
+		return
+	}
+
+	if string(body) != body2 {
+		t.Errorf("body error: %s\n", body)
+		return
+	}
+
+	if !messageBegin {
+		t.Error("message begin is false, expect true")
+		return
+	}
+
+	if !messageComplete {
+		t.Error("message complete is false, expect true")
+		return
+	}
+
+	if !headersComplete {
+		t.Error("headers complete is false, expect true")
+		return
+	}
+	if !p.EOF() {
+		t.Error("EOF is false, expect true")
+		return
+	}
 
 	// fmt.Printf("##:%s", stateTab[p.currState])
 }
@@ -121,7 +149,9 @@ func Test_ParserResponse_Chunked_Both(t *testing.T) {
 	rcvBuf := []byte{}
 	setting := &Setting{
 		Status: func(p *Parser, buf []byte, _ int) {
-			assert.Equal(t, buf, []byte("OK"))
+			if !bytes.Equal(buf, []byte("OK")) {
+				t.Error("status error")
+			}
 		}, MessageBegin: func(p *Parser, _ int) {
 			messageBegin = true
 		}, HeaderField: func(p *Parser, buf []byte, _ int) {
@@ -150,8 +180,8 @@ func Test_ParserResponse_Chunked_Both(t *testing.T) {
 	parserTotal := 0
 	for _, buf := range rsp {
 		rv, err := p.Execute(setting, []byte(buf))
-		assert.NoError(t, err)
 		if err != nil {
+			t.Errorf("err:%s", err)
 			return
 		}
 
@@ -159,10 +189,27 @@ func Test_ParserResponse_Chunked_Both(t *testing.T) {
 		sentTotal += len(buf)
 	}
 
-	assert.Equal(t, rcvBuf, []byte("MozillaDeveloperNetworknew year"))
-	assert.Equal(t, p.Major, uint8(1))
-	assert.Equal(t, p.Minor, uint8(1))
-	assert.True(t, messageBegin)
-	assert.Equal(t, sentTotal, parserTotal)
-	assert.True(t, p.EOF())
+	if !bytes.Equal(rcvBuf, []byte("MozillaDeveloperNetworknew year")) {
+		t.Errorf("rcvBuf:%s", rcvBuf)
+		return
+	}
+	if p.Major != 1 || p.Minor != 1 {
+		t.Errorf("major:%d, minor:%d", p.Major, p.Minor)
+		return
+	}
+
+	if !messageBegin {
+		t.Error("message begin is false, expect true")
+		return
+	}
+
+	if sentTotal != parserTotal {
+		t.Errorf("sendTotal:%d, parserTotal:%d", sentTotal, parserTotal)
+		return
+	}
+
+	if !p.EOF() {
+		t.Error("EOF is false, expect true")
+		return
+	}
 }

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 // 测试请求行
@@ -19,7 +17,9 @@ func Test_ParserResponse_RequestLine(t *testing.T) {
 	url := []byte("/somedir/page.html")
 	setting := &Setting{
 		URL: func(p *Parser, buf []byte, _ int) {
-			assert.Equal(t, string(url), string(buf))
+			if string(url) != string(buf) {
+				t.Errorf("url error: %s\n", buf)
+			}
 		}, MessageBegin: func(p *Parser, _ int) {
 			messageBegin = true
 		},
@@ -118,16 +118,47 @@ func Test_ParserResponse_RequestBody(t *testing.T) {
 	}
 
 	i, err := p.Execute(&setting, data)
-	assert.NoError(t, err)
-	assert.Equal(t, url, []byte("/joyent/http-parser")) //url
-	assert.Equal(t, i, len(data))                       //总数据长度
-	assert.Equal(t, field, field2)                      //header field
-	assert.Equal(t, string(value), value2)              //header field
-	assert.Equal(t, string(body), body2)                //chunked body
-	assert.True(t, messageBegin)
-	assert.True(t, messageComplete)
-	assert.True(t, headersComplete)
-	assert.True(t, p.EOF())
+	if err != nil {
+		t.Errorf("Execute:%v", err)
+		return
+	}
+	if bytes.Equal(url, []byte("/joyent/http-parser")) == false {
+		t.Errorf("url error: %s\n", url)
+		return
+	}
+	if i != len(data) {
+		t.Errorf("data length error\n")
+		return
+	}
+	if bytes.Equal(field, field2) == false {
+		t.Errorf("field error: %s\n", field)
+		return
+	}
+	if bytes.Equal(value, []byte(value2)) == false {
+		t.Errorf("value error: %s\n", value)
+		return
+	}
+	if bytes.Equal(body, []byte(body2)) == false {
+		t.Errorf("body error: %s\n", body)
+		return
+	}
+	if messageBegin == false {
+		t.Errorf("messageBegin is false\n")
+		return
+	}
+	if messageComplete == false {
+		t.Errorf("messageComplete is false\n")
+		return
+	}
+	if headersComplete == false {
+		t.Errorf("headersComplete is false\n")
+		return
+	}
+
+	if p.EOF() == false {
+		t.Errorf("EOF is false\n")
+		return
+	}
 
 	//fmt.Printf("##:%s", stateTab[p.currState])
 }
@@ -215,18 +246,50 @@ func Test_ParserResponse_RequestBody2(t *testing.T) {
 	}
 
 	i, err := p.Execute(&setting, data)
-	assert.NoError(t, err)
-	assert.Equal(t, url, []byte("/joyent/http-parser")) //url
-	assert.Equal(t, i, len(data))                       //总数据长度
-	assert.Equal(t, field, field2)                      //header field
-	assert.Equal(t, string(value), value2)              //header field
-	assert.Equal(t, string(body), body2)                //chunked body
-	assert.True(t, messageBegin)
-	assert.True(t, messageComplete)
-	assert.True(t, headersComplete)
-	assert.True(t, p.EOF())
+	if err != nil {
+		t.Errorf("Execute:%v", err)
+		return
+	}
+	if bytes.Equal(url, []byte("/joyent/http-parser")) == false {
+		t.Errorf("url error: %s\n", url)
+		return
+	}
+	if i != len(data) {
+		t.Errorf("data length error\n")
+		return
+	}
+	if bytes.Equal(field, field2) == false {
+		t.Errorf("field error: %s\n", field)
+		return
+	}
+	if bytes.Equal(value, []byte(value2)) == false {
+		t.Errorf("value error: %s\n", value)
+		return
+	}
 
-	//fmt.Printf("##:%s", stateTab[p.currState])
+	if bytes.Equal(body, []byte(body2)) == false {
+		t.Errorf("body error: %s\n", body)
+		return
+	}
+	if messageBegin == false {
+		t.Errorf("messageBegin is false\n")
+		return
+	}
+	if messageComplete == false {
+		t.Errorf("messageComplete is false\n")
+		return
+	}
+
+	if headersComplete == false {
+		t.Errorf("headersComplete is false\n")
+		return
+	}
+
+	if p.EOF() == false {
+		t.Errorf("EOF is false\n")
+		return
+	}
+
 }
 
 // https://github.com/antlabs/httparser/issues/1
@@ -318,13 +381,13 @@ func Test_ParserRequest_chunked_segment(t *testing.T) {
 		}
 		tb.Reset()
 
-		b := assert.Equal(t, string(data), string(totalSentBuf))
-		if !b {
+		if string(data) != string(totalSentBuf) {
+			t.Fatalf("fail:%s", string(data))
 			return
 		}
 
-		b = assert.Equal(t, body, []byte("hello worldhello world"))
-		if !b {
+		if string(body) != "hello worldhello world" {
+			t.Fatalf("fail:%s", string(body))
 			return
 		}
 	}
