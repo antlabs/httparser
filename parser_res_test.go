@@ -16,9 +16,9 @@ func Test_ParserResponse_StatusLine(t *testing.T) {
 	messageBegin := false
 	rsp := []byte("HTTP/1.1   200   OK\r\n")
 	_, err := p.Execute(&Setting{
-		Status: func(_ *Parser, buf []byte) {
+		Status: func(_ *Parser, buf []byte, _ int) {
 			assert.Equal(t, buf, []byte("OK"))
-		}, MessageBegin: func(*Parser) {
+		}, MessageBegin: func(*Parser, int) {
 			messageBegin = true
 		},
 	}, rsp)
@@ -47,11 +47,11 @@ func Test_ParserResponse_HeaderField(t *testing.T) {
 	rsp := []byte("HTTP/1.1   200   OK\r\n" +
 		"Connection: close\r\n\r\n")
 	_, err := p.Execute(&Setting{
-		Status: func(_ *Parser, buf []byte) {
+		Status: func(_ *Parser, buf []byte, _ int) {
 			assert.Equal(t, buf, []byte("OK"))
-		}, MessageBegin: func(*Parser) {
+		}, MessageBegin: func(*Parser, int) {
 			messageBegin = true
-		}, HeaderField: func(_ *Parser, buf []byte) {
+		}, HeaderField: func(_ *Parser, buf []byte, _ int) {
 			assert.Equal(t, buf, []byte("Connection"))
 		},
 	}, rsp)
@@ -78,13 +78,13 @@ func Test_ParserResponse_HeaderValue(t *testing.T) {
 	rsp := []byte("HTTP/1.1   200   OK\r\n" +
 		"Connection: close\r\n\r\n")
 	_, err := p.Execute(&Setting{
-		Status: func(_ *Parser, buf []byte) {
+		Status: func(_ *Parser, buf []byte, _ int) {
 			assert.Equal(t, buf, []byte("OK"))
-		}, MessageBegin: func(*Parser) {
+		}, MessageBegin: func(*Parser, int) {
 			messageBegin = true
-		}, HeaderField: func(_ *Parser, buf []byte) {
+		}, HeaderField: func(_ *Parser, buf []byte, _ int) {
 			assert.Equal(t, string(buf), "Connection")
-		}, HeaderValue: func(_ *Parser, buf []byte) {
+		}, HeaderValue: func(_ *Parser, buf []byte, _ int) {
 			assert.Equal(t, string(buf), "close")
 		},
 	}, rsp)
@@ -115,13 +115,13 @@ func Test_ParserResponse_Multiple_HeaderValue(t *testing.T) {
 		"Content-Length: 10\r\n" +
 		"Connection: close\r\n\r\n")
 	_, err := p.Execute(&Setting{
-		Status: func(_ *Parser, buf []byte) {
+		Status: func(_ *Parser, buf []byte, _ int) {
 			assert.Equal(t, buf, []byte("OK"))
-		}, MessageBegin: func(*Parser) {
+		}, MessageBegin: func(*Parser, int) {
 			messageBegin = true
-		}, HeaderField: func(_ *Parser, buf []byte) {
+		}, HeaderField: func(_ *Parser, buf []byte, _ int) {
 			field = append(field, string(buf))
-		}, HeaderValue: func(_ *Parser, buf []byte) {
+		}, HeaderValue: func(_ *Parser, buf []byte, _ int) {
 			fieldValue = append(fieldValue, string(buf))
 		},
 	}, rsp)
@@ -155,13 +155,13 @@ func Test_ParserResponse_Content_Length_Body(t *testing.T) {
 	messageBegin := false
 	rcvBuf := []byte{}
 	setting := &Setting{
-		Status: func(_ *Parser, buf []byte) {
+		Status: func(_ *Parser, buf []byte, _ int) {
 			assert.Equal(t, buf, []byte("OK"))
-		}, MessageBegin: func(_ *Parser) {
+		}, MessageBegin: func(_ *Parser, _ int) {
 			messageBegin = true
-		}, HeaderField: func(_ *Parser, buf []byte) {
-		}, HeaderValue: func(_ *Parser, buf []byte) {
-		}, Body: func(_ *Parser, buf []byte) {
+		}, HeaderField: func(_ *Parser, buf []byte, _ int) {
+		}, HeaderValue: func(_ *Parser, buf []byte, _ int) {
+		}, Body: func(_ *Parser, buf []byte, _ int) {
 			rcvBuf = append(rcvBuf, buf...)
 		},
 	}
@@ -205,13 +205,13 @@ func Test_ParserResponse_Chunked(t *testing.T) {
 	messageBegin := false
 	rcvBuf := []byte{}
 	setting := &Setting{
-		Status: func(_ *Parser, buf []byte) {
+		Status: func(_ *Parser, buf []byte, _ int) {
 			assert.Equal(t, buf, []byte("OK"))
-		}, MessageBegin: func(_ *Parser) {
+		}, MessageBegin: func(_ *Parser, _ int) {
 			messageBegin = true
-		}, HeaderField: func(_ *Parser, buf []byte) {
-		}, HeaderValue: func(_ *Parser, buf []byte) {
-		}, Body: func(_ *Parser, buf []byte) {
+		}, HeaderField: func(_ *Parser, buf []byte, _ int) {
+		}, HeaderValue: func(_ *Parser, buf []byte, _ int) {
+		}, Body: func(_ *Parser, buf []byte, _ int) {
 			rcvBuf = append(rcvBuf, buf...)
 		},
 	}

@@ -21,14 +21,14 @@ var benchData = []byte(
 		"Cache-Control: max-age=0\r\n\r\nb\r\nhello world\r\n0\r\n")
 
 var setting = Setting{
-	MessageBegin:    func(*Parser) {},
-	URL:             func(*Parser, []byte) {},
-	Status:          func(*Parser, []byte) {},
-	HeaderField:     func(*Parser, []byte) {},
-	HeaderValue:     func(*Parser, []byte) {},
-	HeadersComplete: func(*Parser) {},
-	Body:            func(*Parser, []byte) {},
-	MessageComplete: func(*Parser) {},
+	MessageBegin:    func(*Parser, int) {},
+	URL:             func(*Parser, []byte, int) {},
+	Status:          func(*Parser, []byte, int) {},
+	HeaderField:     func(*Parser, []byte, int) {},
+	HeaderValue:     func(*Parser, []byte, int) {},
+	HeadersComplete: func(*Parser, int) {},
+	Body:            func(*Parser, []byte, int) {},
+	MessageComplete: func(*Parser, int) {},
 }
 
 func Benchmark_Parser(b *testing.B) {

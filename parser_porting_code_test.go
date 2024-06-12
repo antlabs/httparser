@@ -1938,36 +1938,36 @@ var responses = []message{
 }
 
 var settingTest Setting = Setting{
-	MessageBegin: func(p *Parser) {
+	MessageBegin: func(p *Parser, _ int) {
 		m := p.GetUserData().(*message)
 		m.messageBeginCbCalled = true
 		m.hType = p.hType
 	},
-	URL: func(p *Parser, url []byte) {
+	URL: func(p *Parser, url []byte, _ int) {
 		m := p.GetUserData().(*message)
 		m.requestURL += string(url)
 	},
-	Status: func(p *Parser, status []byte) {
+	Status: func(p *Parser, status []byte, _ int) {
 		m := p.GetUserData().(*message)
 		m.responseStatus += string(status)
 	},
-	HeaderField: func(p *Parser, headerField []byte) {
+	HeaderField: func(p *Parser, headerField []byte, _ int) {
 		m := p.GetUserData().(*message)
 		m.headers = append(m.headers, [2]string{string(headerField), ""})
 	},
-	HeaderValue: func(p *Parser, headerValue []byte) {
+	HeaderValue: func(p *Parser, headerValue []byte, _ int) {
 		m := p.GetUserData().(*message)
 		m.headers[len(m.headers)-1][1] = string(headerValue)
 	},
-	HeadersComplete: func(p *Parser) {
+	HeadersComplete: func(p *Parser, _ int) {
 		m := p.GetUserData().(*message)
 		m.headersCompleteCbCalled = true
 	},
-	Body: func(p *Parser, body []byte) {
+	Body: func(p *Parser, body []byte, _ int) {
 		m := p.GetUserData().(*message)
 		m.body += string(body)
 	},
-	MessageComplete: func(p *Parser) {
+	MessageComplete: func(p *Parser, _ int) {
 		m := p.GetUserData().(*message)
 		m.method = p.Method
 		m.messageCompleteCbCalled = true
